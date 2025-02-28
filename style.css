@@ -1,0 +1,14 @@
+body {
+  font-family: Arial, sans-serif;
+  width: 300px;
+  padding: 10px;
+}
+#toggleFocusButton {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 5px;
+}
+#statusDisplay {
+  margin-top: 10px;
+  font-size: small;
+}

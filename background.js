@@ -28,25 +28,33 @@ async function writeState(state=stateCache) {
   return chrome.storage.local.set(state);
 }
 
-// TODO - Change to enter/leaveFocus
-async function toggleFocus() {
+async function enterFocus() {
   const state = await getState();
   if (state.inFocus) {
-    state.inFocus = false;
-    const stopTimestamp = Date.now();
-    state.focusTimes.push({ start: state.focusStartTimestamp, stop: stopTimestamp });
-    state.totalFocusMillis += stopTimestamp - state.focusStartTimestamp;
-    state.focusStartTimestamp = 0;
-    state.nextAlarmTimestamp = 0;
-    updateBadge();
-    chrome.alarms.clear(updateAlarmName);
-  } else {
-    state.inFocus = true;
-    state.focusStartTimestamp = Date.now();
-    state.nextAlarmTimestamp = state.focusStartTimestamp + (focusGoalMinutes * 60000);
-    updateBadge();
-    await chrome.alarms.create(updateAlarmName, alarmConfig);
+    return state;
   }
+  state.inFocus = true;
+  state.focusStartTimestamp = Date.now();
+  state.nextAlarmTimestamp = state.focusStartTimestamp + (focusGoalMinutes * 60000);
+  updateBadge();
+  chrome.alarms.create(updateAlarmName, alarmConfig);
+  await writeState();
+  return state;
+}
+
+async function leaveFocus() {
+  const state = await getState();
+  if (!state.inFocus) {
+    return state;
+  }
+  state.inFocus = false;
+  const stopTimestamp = Date.now();
+  state.focusTimes.push({ start: state.focusStartTimestamp, stop: stopTimestamp });
+  state.totalFocusMillis += stopTimestamp - state.focusStartTimestamp;
+  state.focusStartTimestamp = 0;
+  state.nextAlarmTimestamp = 0;
+  updateBadge();
+  chrome.alarms.clear(updateAlarmName);
   await writeState();
   return state;
 }
@@ -94,8 +102,11 @@ const commands = {
   "get_state": async function(args) {
     return getState();
   },
-  "toggle_focus": async function(args) {
-    return toggleFocus();
+  "enter_focus": async function(args) {
+    return enterFocus();
+  },
+  "leave_focus": async function(args) {
+    return leaveFocus();
   },
 };
   
@@ -136,7 +147,7 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, btnIndex
     }
     if (btnIndex === 1) {
       // Take a break.
-      await toggleFocus();
+      await leaveFocus();
       return;
     }
   }

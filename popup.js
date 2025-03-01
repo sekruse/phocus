@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const toggleFocusButton = document.getElementById('toggleFocusButton');
   const statusDisplay = document.getElementById('statusDisplay');
+  let inFocus = null;
 
   function formatTimer(millis) {
     const secs = Math.trunc(millis / 1000) % 60;
@@ -30,17 +31,20 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(`No response for get_state: ${response}`);
       }
       updateElements(response);
+      inFocus = response.inFocus;
     });
   };
   refreshElements();
 
-  toggleFocusButton.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ command: "toggle_focus" }, response => {
-      if (!response) {
-        throw new Error(`No response for toggle_focus: ${response}`);
-      }
-      updateElements(response);
-    });
+  toggleFocusButton.addEventListener('click', async () => {
+    let response;
+    const command = inFocus ? 'leave_focus' : 'enter_focus';
+    response = await chrome.runtime.sendMessage({ command });
+    if (!response) {
+      throw new Error(`No response for ${command}: ${response}`);
+    }
+    updateElements(response);
+    inFocus = response.inFocus;
   });
   
   setInterval(refreshElements, 1000);

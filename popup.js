@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function formatTimer(millis) {
     const secs = Math.trunc(millis / 1000) % 60;
-    const mins = Math.trunc(millis / 60000);
-    const hours = Math.trunc(millis / (24 * 60000));
+    const mins = Math.trunc(millis / 60000) % 60;
+    const hours = Math.trunc(millis / 3600000);
     if (hours > 0) {
       return `${hours}h ${mins}m ${secs}s`;
     }

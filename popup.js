@@ -20,9 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleFocusButton.disabled = false;
     if (state.inFocus) {
       toggleFocusButton.textContent = 'Leave focus';
+      if (!toggleFocusButton.classList.contains('inFocus')) {
+        toggleFocusButton.classList.add('inFocus');
+      }
+      toggleFocusButton.classList.remove('outsideFocus');
       statusDisplay.textContent = formatTimer(Date.now() - state.focusStartTimestamp);
     } else {
       toggleFocusButton.textContent = 'Enter focus';
+      if (!toggleFocusButton.classList.contains('outsideFocus')) {
+        toggleFocusButton.classList.add('outsideFocus');
+      }
+      toggleFocusButton.classList.remove('insideFocus');
       statusDisplay.textContent = formatTimer(0);
     }
     totalDisplay.textContent = `Total focus time: ${formatTimer(state.totalFocusMillis)}`;

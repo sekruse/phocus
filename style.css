@@ -2,6 +2,8 @@ body {
   font-family: Arial, sans-serif;
   width: 300px;
   padding: 10px;
+  background-color: #333333;
+  color: white;
 }
 .container {
   display: grid;
@@ -13,14 +15,36 @@ body {
 }
 #toggleFocusButton {
   width: 100%;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 18px;
+  font-family: sans-serif;
+  font-size: larger;
+  font-weight: bold;
+}
+#toggleFocusButton.inFocus {
+  background-color: #feae00;
+  color: #1e1e1e;
+}
+#toggleFocusButton.outsideFocus {
+  background-color: #2196F3;
+  color: #ffffff;
 }
 #statusDisplay {
   font-size: medium;
 }
 #totalDisplay {
+  padding: 2px;
   grid-column: 1 / 2;
   font-size: small;
 }
 #resetButton {
   width: 100%;
+  padding: 2px;
+  background-color: #cb0202;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: small;
 }
+

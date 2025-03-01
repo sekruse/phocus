@@ -3,7 +3,10 @@
   "description": "Get in the zone and track your focus time.",
   "version": "0.0.1",
   "manifest_version": 3,
-  "permissions": ["storage"],
+  "permissions": [
+    "alarms",
+    "storage"
+  ],
   "action": {
     "default_icon": {
       "16": "images/icon-16.png",

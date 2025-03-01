@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function refreshElements() {
-    chrome.runtime.sendMessage({ command: "get_state" }, response => {
+    chrome.runtime.sendMessage({ command: "get_state" }, async response => {
       if (!response) {
         throw new Error(`No response for get_state: ${response}`);
       }

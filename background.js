@@ -59,6 +59,12 @@ async function leaveFocus() {
   return state;
 }
 
+async function resetTotal() {
+  const state = await getState();
+  state.totalFocusMillis = 0;
+  return writeState(state);
+}
+
 async function updateBadge() {
   const state = await getState();
   if (state.inFocus) {
@@ -107,6 +113,9 @@ const commands = {
   },
   "leave_focus": async function(args) {
     return leaveFocus();
+  },
+  "reset_total": async function(args) {
+    return resetTotal();
   },
 };
   

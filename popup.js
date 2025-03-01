@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
   const toggleFocusButton = document.getElementById('toggleFocusButton');
+  const resetButton = document.getElementById('resetButton');
   const statusDisplay = document.getElementById('statusDisplay');
+  const totalDisplay = document.getElementById('totalDisplay');
+
   let inFocus = null;
 
   function formatTimer(millis) {
@@ -45,6 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateElements(response);
     inFocus = response.inFocus;
+  });
+
+  resetButton.addEventListener('click', async () => {
+    await chrome.runtime.sendMessage({ command: 'reset_total' });
+    refreshElements();
   });
   
   setInterval(refreshElements, 1000);

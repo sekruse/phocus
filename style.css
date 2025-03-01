@@ -3,16 +3,24 @@ body {
   width: 300px;
   padding: 10px;
 }
+.container {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 2fr 1fr;
+}
+.fullRow {
+  grid-column: 1 / span 2;
+}
 #toggleFocusButton {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 5px;
 }
 #statusDisplay {
-  margin-top: 10px;
   font-size: medium;
 }
 #totalDisplay {
-  margin-top: 10px;
+  grid-column: 1 / 2;
   font-size: small;
+}
+#resetButton {
+  width: 100%;
 }

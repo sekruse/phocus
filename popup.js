@@ -5,19 +5,23 @@ document.addEventListener('DOMContentLoaded', () => {
   function formatTimer(millis) {
     const secs = Math.trunc(millis / 1000) % 60;
     const mins = Math.trunc(millis / 60000);
+    const hours = Math.trunc(millis / (24 * 60000));
+    if (hours > 0) {
+      return `${hours}h ${mins}m ${secs}s`;
+    }
     return `${mins}m ${secs}s`;
-
   };
 
   function updateElements(state) {
     toggleFocusButton.disabled = false;
     if (state.inFocus) {
       toggleFocusButton.textContent = 'Leave focus';
-      statusDisplay.textContent = formatTimer(Date.now() - state.startTimestamp);
+      statusDisplay.textContent = formatTimer(Date.now() - state.focusStartTimestamp);
     } else {
       toggleFocusButton.textContent = 'Enter focus';
-      statusDisplay.textContent = '';
+      statusDisplay.textContent = formatTimer(0);
     }
+    totalDisplay.textContent = `Total focus time: ${formatTimer(state.totalFocusMillis)}`;
   };
 
   function refreshElements() {

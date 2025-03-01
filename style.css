@@ -10,5 +10,9 @@ body {
 }
 #statusDisplay {
   margin-top: 10px;
+  font-size: medium;
+}
+#totalDisplay {
+  margin-top: 10px;
   font-size: small;
 }

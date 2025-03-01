@@ -1,6 +1,8 @@
 const state = {
   "inFocus": false,
-  "startTimestamp": 0,
+  "focusStartTimestamp": 0,
+  "focusTimes": [],
+  "totalFocusMillis": 0,
 };
 
 const commands = {
@@ -10,9 +12,13 @@ const commands = {
   "toggle_focus": function(args) {
     if (state.inFocus) {
       state.inFocus = false;
+      const stopTimestamp = state.focusStartTimestamp;
+      state.focusTimes.push({ start: state.focusStartTimestamp, stop: stopTimestamp });
+      state.totalFocusMillis += stopTimestamp - state.focusStartTimestamp;
+      state.focusStartTimestamp = 0;
     } else {
       state.inFocus = true;
-      state.startTimestamp = Date.now();
+      state.focusStartTimestamp = Date.now();
     }
     return state;
   },

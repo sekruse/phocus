@@ -213,15 +213,18 @@ chrome.idle.onStateChanged.addListener(async (newState) => {
   } else if (newState === 'idle') {
     // Ask the user if they are still here and give them the option to retroactively leave their focus time.
     if (state.inFocus && !state.idleStartTimestamp) {
-      state.idleStartTimestamp = Date.now();
+      state.idleStartTimestamp = Date.now() - (idleDetectionSeconds * 1000);
       await writeState(state);
       notifyOfIdleDetection();
       return;
     }
     return;
   } else if (newState === 'locked') {
-    // Cancel if machine is locked while in focus.
-    if (state.inFocus) {
+    // Cancel if machine is actively locked while in focus.
+    // If there is a pending idle notification, the device was likely auto-locked,
+    // so in that case we don't auto-cancel and wait for the user to return and
+    // tell if they forgot to mark their focus time as over.
+    if (state.inFocus && !state.idleStartTimestamp) {
       leaveFocus();
       notifyOfAutocancel();
     }

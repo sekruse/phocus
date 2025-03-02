@@ -3,6 +3,7 @@ let stateCache = null;
 const defaultState = {
   "inFocus": false,
   "focusStartTimestamp": 0,
+  "idleStartTimestamp": 0,
   "focusTimes": [],
   "totalFocusMillis": 0,
   "nextAlarmTimestamp": 0,
@@ -10,9 +11,11 @@ const defaultState = {
 
 const updateAlarmName = 'phocus-update-alarm';
 const focusGoalNotificationName = 'phocus-goal-notification';
-const autocancelNotificationName = 'phocus-autocancel-notification';
+const lockedNotificationName = 'phocus-locked-notification';
+const idleNotificationName = 'phocus-idle-notification';
 const focusGoalMinutes = 25;
 const snoozeMinutes = 10;
+const idleDetectionSeconds = 120;
 const alarmConfig = {
   periodInMinutes: 0.5,
 };
@@ -37,25 +40,27 @@ async function enterFocus() {
   state.inFocus = true;
   state.focusStartTimestamp = Date.now();
   state.nextAlarmTimestamp = state.focusStartTimestamp + (focusGoalMinutes * 60000);
+  state.idleStartTimestamp = 0;
   updateBadge();
   chrome.alarms.create(updateAlarmName, alarmConfig);
   await writeState();
   return state;
 }
 
-async function leaveFocus() {
+async function leaveFocus(stopTimestamp = Date.now()) {
   const state = await getState();
   if (!state.inFocus) {
     return state;
   }
   state.inFocus = false;
-  const stopTimestamp = Date.now();
   state.focusTimes.push({ start: state.focusStartTimestamp, stop: stopTimestamp });
   state.totalFocusMillis += stopTimestamp - state.focusStartTimestamp;
   state.focusStartTimestamp = 0;
   state.nextAlarmTimestamp = 0;
+  state.idleStartTimestamp = 0;
   updateBadge();
   chrome.alarms.clear(updateAlarmName);
+  chrome.notifications.clear(idleNotificationName);
   await writeState();
   return state;
 }
@@ -92,15 +97,27 @@ async function notifyOfGoal() {
 }
 
 async function notifyOfAutocancel() {
-  await chrome.notifications.create(autocancelNotificationName, {
+  await chrome.notifications.create(lockedNotificationName, {
     type: 'basic',
     iconUrl: 'images/icon-128.png',
     title: 'Phocus',
-    message: 'Your focus time was cancelled, because you seem to have left your computer.',
-    requireInteraction: true,
+    message: 'Your focus time was cancelled when you locked your computer.',
+    requireInteraction: false,
   });
 }
 
+async function notifyOfIdleDetection() {
+  const state = await getState();
+  const date = new Date(state.idleStartTimestamp);
+  await chrome.notifications.create(idleNotificationName, {
+    type: 'basic',
+    iconUrl: 'images/icon-128.png',
+    title: 'Phocus',
+    message: `Your computer has been detected as idle since ${date.toLocaleTimeString()}. Have you left your focus then?`,
+    requireInteraction: true,
+    buttons: [{ title: 'Yes, I left my focus time.' }, { title: 'No, I was keeping my focus.' }],
+  });
+}
 
 async function initialize() {
   const state = await getState();
@@ -171,19 +188,39 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, btnIndex
       await leaveFocus();
       return;
     }
+  } else if (notificationId === idleNotificationName) {
+    chrome.notifications.clear(idleNotificationName);
+    const state = await getState();
+    if (btnIndex === 0) {
+      // User left focus.
+      await leaveFocus(state.idleStartTimestamp);
+      return;
+    } else if (btnIndex === 1) {
+      // User did not leave their focus.
+      state.idleStartTimestamp = 0;
+      await writeState(state);
+      return;
+    }
   }
   throw new Error(`Unknown notification: ${notificationId}`);
 });
 
+chrome.idle.setDetectionInterval(idleDetectionSeconds);
 chrome.idle.onStateChanged.addListener(async (newState) => {
+  const state = await getState();
   if (newState === 'active') {
     return;
   } else if (newState === 'idle') {
-    // TODO: Ask the user if they are still here. If not, auto-cancel.
+    // Ask the user if they are still here and give them the option to retroactively leave their focus time.
+    if (state.inFocus && !state.idleStartTimestamp) {
+      state.idleStartTimestamp = Date.now();
+      await writeState(state);
+      notifyOfIdleDetection();
+      return;
+    }
     return;
   } else if (newState === 'locked') {
     // Cancel if machine is locked while in focus.
-    const state = await getState();
     if (state.inFocus) {
       leaveFocus();
       notifyOfAutocancel();

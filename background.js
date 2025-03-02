@@ -10,6 +10,7 @@ const defaultState = {
 
 const updateAlarmName = 'phocus-update-alarm';
 const focusGoalNotificationName = 'phocus-goal-notification';
+const autocancelNotificationName = 'phocus-autocancel-notification';
 const focusGoalMinutes = 25;
 const snoozeMinutes = 10;
 const alarmConfig = {
@@ -90,6 +91,17 @@ async function notifyOfGoal() {
   });
 }
 
+async function notifyOfAutocancel() {
+  await chrome.notifications.create(autocancelNotificationName, {
+    type: 'basic',
+    iconUrl: 'images/icon-128.png',
+    title: 'Phocus',
+    message: 'Your focus time was cancelled, because you seem to have left your computer.',
+    requireInteraction: true,
+  });
+}
+
+
 async function initialize() {
   const state = await getState();
   if (!state.inFocus) {
@@ -161,4 +173,22 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, btnIndex
     }
   }
   throw new Error(`Unknown notification: ${notificationId}`);
+});
+
+chrome.idle.onStateChanged.addListener(async (newState) => {
+  if (newState === 'active') {
+    return;
+  } else if (newState === 'idle') {
+    // TODO: Ask the user if they are still here. If not, auto-cancel.
+    return;
+  } else if (newState === 'locked') {
+    // Cancel if machine is locked while in focus.
+    const state = await getState();
+    if (state.inFocus) {
+      leaveFocus();
+      notifyOfAutocancel();
+    }
+    return;
+  }
+  throw new Error(`Unknown idle state: ${newState}`);
 });

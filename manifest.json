@@ -5,6 +5,7 @@
   "manifest_version": 3,
   "permissions": [
     "alarms",
+    "idle",
     "notifications",
     "storage"
   ],

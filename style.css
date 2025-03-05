@@ -1,9 +1,11 @@
 body {
   font-family: Arial, sans-serif;
-  width: 300px;
   padding: 10px;
   background-color: #333333;
   color: white;
+}
+body.popup {
+  width: 300px;
 }
 .container {
   display: grid;
@@ -13,7 +15,7 @@ body {
 .fullRow {
   grid-column: 1 / span 2;
 }
-#toggleFocusButton {
+.button {
   width: 100%;
   border: none;
   border-radius: 5px;
@@ -21,6 +23,10 @@ body {
   font-family: sans-serif;
   font-size: larger;
   font-weight: bold;
+}
+.blueButton {
+  background-color: #2196F3;
+  color: #ffffff;
 }
 #toggleFocusButton.inFocus {
   background-color: #feae00;
@@ -47,4 +53,14 @@ body {
   color: white;
   font-size: small;
 }
-
+form.options {
+  max-width: 500px;
+}
+input.options {
+  width: 100%;
+  padding: 5px 3px;
+  margin-bottom: 10px;
+}
+button.options {
+  width: 100%;
+}

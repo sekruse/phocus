@@ -1,5 +1,4 @@
 let stateCache = null;
-
 const defaultState = {
   "inFocus": false,
   "focusStartTimestamp": 0,
@@ -8,6 +7,68 @@ const defaultState = {
   "totalFocusMillis": 0,
   "nextAlarmTimestamp": 0,
 };
+
+async function getState() {
+  if (stateCache === null) {
+    const { state: loadedState } = await chrome.storage.local.get();
+    stateCache = {...defaultState, ...loadedState};
+  }
+  return stateCache;
+}
+
+async function writeState(state=stateCache) {
+  return chrome.storage.local.set({ state });
+}
+
+let optionsCache = null;
+const defaultOptions = {
+  "focusGoalMinutes": 25,
+  "snoozeMinutes": 10,
+  "idleDetectionSeconds": 120,
+};
+
+async function getOptions() {
+  if (optionsCache === null) {
+    const { options: loadedOptions } = await chrome.storage.local.get(['options']);
+    optionsCache = {...defaultOptions, ...loadedOptions};
+  }
+  return optionsCache;
+}
+
+function vetOptions(options) {
+  if (!Object.hasOwn(options, 'focusGoalMinutes')) {
+    throw new Error(`focusGoalMinutes are missing in ${options}`);
+  }
+  if (!(options.focusGoalMinutes > 0 && options.focusGoalMinutes <= 240)) {
+    throw new Error(`focusGoalMinutes should be between 0 and 240, is ${options.focusGoalMinutes}`);
+  }
+  if (!Object.hasOwn(options, 'snoozeMinutes')) {
+    throw new Error(`snoozeMinutes are missing in ${options}`);
+  }
+  if (!(options.snoozeMinutes > 0 && options.snoozeMinutes <= 60)) {
+    throw new Error(`snoozeMinutes should be between 0 and 60, is ${options.snoozeMinutes}`);
+  }
+  if (!Object.hasOwn(options, 'idleDetectionSeconds')) {
+    throw new Error(`idleDetectionSeconds are missing in ${options}`)
+  }
+  if (!(options.idleDetectionSeconds > 0 && options.idleDetectionSeconds <= 1800)) {
+    throw new Error(`idleDetectionSeconds should be between 0 and 1800, is ${options.idleDetectionSeconds}`);
+  }
+};
+
+async function writeOptions(options) {
+  return chrome.storage.local.set({ options });
+}
+
+async function setOptions(newOptions) {
+  vetOptions(newOptions);
+  const options = getOptions();
+  options.focusGoalMinutes = newOptions.focusGoalMinutes;
+  options.snoozeMinutes = newOptions.snoozeMinutes;
+  options.idleDetectionSeconds = newOptions.idleDetectionSeconds;
+  await writeOptions(options);
+  return options;
+}
 
 const updateAlarmName = 'phocus-update-alarm';
 const focusGoalNotificationName = 'phocus-goal-notification';
@@ -20,17 +81,8 @@ const alarmConfig = {
   periodInMinutes: 0.5,
 };
 
-async function getState() {
-  if (stateCache === null) {
-    const loadedState = await chrome.storage.local.get();
-    stateCache = {...defaultState, ...loadedState};
-  }
-  return stateCache;
-}
 
-async function writeState(state=stateCache) {
-  return chrome.storage.local.set(state);
-}
+
 
 async function enterFocus() {
   const state = await getState();
@@ -61,6 +113,7 @@ async function leaveFocus(stopTimestamp = Date.now()) {
   updateBadge();
   chrome.alarms.clear(updateAlarmName);
   chrome.notifications.clear(idleNotificationName);
+  chrome.notifications.clear(focusGoalNotificationName);
   await writeState();
   return state;
 }
@@ -145,6 +198,12 @@ const commands = {
   },
   "reset_total": async function(args) {
     return resetTotal();
+  },
+  "get_options": async function(args) {
+    return getOptions();
+  },
+  "set_options": async function(args) {
+    return setOptions(args.options);
   },
 };
   

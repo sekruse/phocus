@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section>
+    <h1>Controls</h1>
+    <div class="container">
+      <div class="fullRow">
+        <button class="button" id="toggleFocusButton" disabled>...</button>
+      </div>
+      <div id="statusDisplay" class="fullRow">...</div>
+      <div id="totalDisplay">...</div>
+      <div>
+        <button class="button" id="resetButton">Reset total</button>
+      </div>
+    </div>
+  </section>
+  <section>
+    <h1>History</h1>
+    <div class="form-element">
+      <label for="historyDate">Date:</label>
+      <input type="date" name="historyDate" id="historyDatePicker">
+    </div>
+    <table id="history-table">
+      <thead>
+        <tr>
+          <th scope="col">Start</th>
+          <th scope="col">End</th>
+          <th scope="col">Notes</th>
+          <th scope="col" class="text-align-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dummy entry for development. Will be removed.
+        <tr>
+          <td>01:23</td>
+          <td>04:56</td>
+          <td>Dummy entry</td>
+          <td class="text-align-center">
+            <button class="button button-blue">Edit</button>
+            <button class="button button-red">Delete</button>
+          </td>
+        </tr>
+        -->
+      </tbody>
+    </table>
+    <script src="popup.js"></script>
+  </section>
+  <button id="add-entry-button" class="button button-big button-blue">+</button>
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Update focus entry</h3>
+      </div>
+      <div class="modal-body">
+        <div class="form-element">
+          <label for="starttime">Start time:</label>
+          <input id="starttime" name="starttime" type="time" value="01:23">
+        </div>
+        <div class="form-element">
+          <label for="stoptime">Stop time:</label>
+          <input id="stoptime" name="stoptime" type="time" value="04:56">
+        </div>
+        <div class="form-element">
+          <label for="notes">Notes:</label>
+          <input id="notes" name="notes" type="text" value="Dummy entry">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-cancel-button" class="button">Cancel</button>
+        <button id="modal-save-button" class="button button-blue" style="margin-left: 5px;">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="side-panel.js"></script>
+</body>
+</html>

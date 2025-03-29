@@ -156,6 +156,14 @@ async function resetTotal() {
   return writeState(state);
 }
 
+async function listHistory(filter) {
+  const history = await getHistory();
+  return history.filter((entry) => {
+    // The negation allows for undefined filters properties to have no effect.
+    return !(filter.fromTimestamp > entry.stopTimestamp) && !(filter.untilTimestamp < entry.startTimestamp);
+  });
+}
+
 async function updateBadge() {
   const state = await getState();
   if (state.inFocus) {
@@ -231,6 +239,9 @@ const commands = {
   "reset_total": async function(args) {
     return resetTotal();
   },
+  "list_history": async function(args) {
+    return listHistory(args);
+  },
   "get_options": async function(args) {
     return getOptions();
   },
@@ -241,6 +252,7 @@ const commands = {
   
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
+    console.log(`Received request: ${JSON.stringify(request)}`);
     const impl = commands[request.command];
     if (!impl) {
       throw new Error(`Undefined command in ${request}.`);

@@ -3,14 +3,14 @@ const defaultState = {
   "inFocus": false,
   "focusStartTimestamp": 0,
   "idleStartTimestamp": 0,
-  "focusTimes": [],
   "totalFocusMillis": 0,
   "nextAlarmTimestamp": 0,
+  "nextHistoryId": 0,
 };
 
 async function getState() {
   if (stateCache === null) {
-    const { state: loadedState } = await chrome.storage.local.get();
+    const { state: loadedState } = await chrome.storage.local.get(['state']);
     stateCache = {...defaultState, ...loadedState};
   }
   return stateCache;
@@ -19,6 +19,29 @@ async function getState() {
 async function writeState(state=stateCache) {
   return chrome.storage.local.set({ state });
 }
+
+let historyCache = null;
+
+async function getHistory() {
+  if (historyCache === null) {
+    const storageKeys = await chrome.storage.local.getKeys();
+    if (!storageKeys.includes('history')) {
+      historyCache = [];
+      return historyCache;
+    }
+    const { history } = await chrome.storage.local.get(['history']);
+    historyCache = history;
+  }
+  return historyCache;
+}
+
+async function writeHistory() {
+  if (historyCache === null) {
+    throw Error('historyCache is not loaded.');
+  }
+  return await chrome.storage.local.set({ history: historyCache });
+}
+
 
 let optionsCache = null;
 const defaultOptions = {
@@ -104,17 +127,26 @@ async function leaveFocus(stopTimestamp = Date.now()) {
   if (!state.inFocus) {
     return state;
   }
+  await getHistory();
   state.inFocus = false;
-  state.focusTimes.push({ start: state.focusStartTimestamp, stop: stopTimestamp });
+  historyCache.push({
+    id: state.nextHistoryId,
+    startTimestamp: state.focusStartTimestamp,
+    stopTimestamp: stopTimestamp,
+    notes: 'n/a',
+    version: 0,
+  });
   state.totalFocusMillis += stopTimestamp - state.focusStartTimestamp;
   state.focusStartTimestamp = 0;
   state.nextAlarmTimestamp = 0;
   state.idleStartTimestamp = 0;
+  state.nextHistoryId++;
   updateBadge();
   chrome.alarms.clear(updateAlarmName);
   chrome.notifications.clear(idleNotificationName);
   chrome.notifications.clear(focusGoalNotificationName);
   await writeState();
+  await writeHistory();
   return state;
 }
 

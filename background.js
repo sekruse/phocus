@@ -93,6 +93,13 @@ async function setOptions(newOptions) {
   return options;
 }
 
+async function resetStorage() {
+  stateCache = null;
+  historyCache = null;
+  optionsCache = null;
+  await chrome.storage.local.clear();
+}
+
 const updateAlarmName = 'phocus-update-alarm';
 const focusGoalNotificationName = 'phocus-goal-notification';
 const lockedNotificationName = 'phocus-locked-notification';
@@ -316,6 +323,9 @@ const commands = {
   },
   "set_options": async function(args) {
     return setOptions(args.options);
+  },
+  "reset_storage": async function(args) {
+    return resetStorage();
   },
 };
   

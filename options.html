@@ -6,17 +6,24 @@
 </head>
 <body>
   <h1>Phocus Options</h1>
-  <div class="container">
-    <form id="optionsForm" class="options">
-      <label for="focusGoal">Focus goal, in minutes:</label>
-      <input type="number" min="1" step="1" id="focusGoal" name="focusGoal" class="options">
-      <label>Snooze time, in minutes:</label>
-      <input type="number" min="1" step="1" id="snooze" class="options">
-      <label>Idle time before a warning is triggered, in seconds:</label>
-      <input type="number" min="1" step="1" id="idleDetection" class="options">
-      <button type="submit" class="button blueButton options">Save</button>
-    </form>
-  </div>
+  <section>
+    <h2>Settings</h2>
+    <div class="container">
+      <form id="optionsForm" class="options">
+        <label for="focusGoal">Focus goal, in minutes:</label>
+        <input type="number" min="1" step="1" id="focusGoal" name="focusGoal" class="options">
+        <label>Snooze time, in minutes:</label>
+        <input type="number" min="1" step="1" id="snooze" class="options">
+        <label>Idle time before a warning is triggered, in seconds:</label>
+        <input type="number" min="1" step="1" id="idleDetection" class="options">
+        <button type="submit" class="button blueButton options">Save</button>
+      </form>
+    </div>
+  </section>
+  <section>
+    <h2>Administration</h2>
+    <button id="resetStorageButton" class="button button-red">Reset storage</button>
+  </section>
   <script src="options.js"></script>
 </body>
 </html>

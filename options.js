@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const snoozeInput = document.getElementById('snooze');
   const idleDetectionInput = document.getElementById('idleDetection');
   const optionsForm = document.getElementById('optionsForm');
+  const resetStorageButton = document.getElementById('resetStorageButton');
 
   chrome.runtime.sendMessage({ command: "get_options" }, async response => {
     console.log(`get_options: ${response}`);
@@ -34,5 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       alert(`An exception occurred while saving the configuration: ${e}`);
     }
+  });
+
+  resetStorageButton.addEventListener('click', async (ev) => {
+    const response = await chrome.runtime.sendMessage({
+      command: 'reset_storage',
+    });
   });
 });

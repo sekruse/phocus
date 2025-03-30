@@ -120,8 +120,3 @@ refreshHistory();
 addEntryButton.addEventListener('click', showModal);
 modalCancelButton.addEventListener('click', hideModal);
 modalSaveButton.addEventListener('click', hideModal);
-modal.addEventListener('click', (event) => {
-  if (event.target === modal) {
-    hideModal(event);
-  }
-});

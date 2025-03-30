@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const resetButton = document.getElementById('resetButton');
   const statusDisplay = document.getElementById('statusDisplay');
   const totalDisplay = document.getElementById('totalDisplay');
+  const openSidePanelLink = document.getElementById('openSidePanelLink');
 
   let inFocus = null;
 
@@ -63,5 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshElements();
   });
   
+  openSidePanelLink.addEventListener('click', async () => {
+    const window = await chrome.windows.getCurrent();
+    await chrome.sidePanel.open({windowId: window.id});
+  });
+
   setInterval(refreshElements, 1000);
 });
+

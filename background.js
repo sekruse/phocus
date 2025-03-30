@@ -16,8 +16,17 @@ async function getState() {
   return stateCache;
 }
 
-async function writeState(state=stateCache) {
-  return chrome.storage.local.set({ state });
+function writeState(state=stateCache) {
+  const result = chrome.storage.local.set({ state });
+  notifyStateChanged(state);  // fire and forget
+  return result;
+}
+
+function notifyStateChanged(state=stateCache) {
+  return chrome.runtime.sendMessage({
+    event: 'state_changed',
+    state: state,
+  });
 }
 
 let historyCache = null;
@@ -110,9 +119,6 @@ const idleDetectionSeconds = 120;
 const alarmConfig = {
   periodInMinutes: 0.5,
 };
-
-
-
 
 async function enterFocus() {
   const state = await getState();

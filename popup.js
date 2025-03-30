@@ -1,11 +1,11 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const toggleFocusButton = document.getElementById('toggleFocusButton');
   const resetButton = document.getElementById('resetButton');
   const statusDisplay = document.getElementById('statusDisplay');
   const totalDisplay = document.getElementById('totalDisplay');
   const openSidePanelLink = document.getElementById('openSidePanelLink');
 
-  let inFocus = null;
+  let stateCache = await chrome.runtime.sendMessage({command: 'get_state'});
 
   function formatTimer(millis) {
     const secs = Math.trunc(millis / 1000) % 60;
@@ -17,15 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${mins}m ${secs}s`;
   };
 
-  function updateElements(state) {
+  function updateElements() {
     toggleFocusButton.disabled = false;
-    if (state.inFocus) {
+    if (stateCache.inFocus) {
       toggleFocusButton.textContent = 'Leave focus';
       if (!toggleFocusButton.classList.contains('inFocus')) {
         toggleFocusButton.classList.add('inFocus');
       }
       toggleFocusButton.classList.remove('outsideFocus');
-      statusDisplay.textContent = formatTimer(Date.now() - state.focusStartTimestamp);
+      statusDisplay.textContent = formatTimer(Date.now() - stateCache.focusStartTimestamp);
     } else {
       toggleFocusButton.textContent = 'Enter focus';
       if (!toggleFocusButton.classList.contains('outsideFocus')) {
@@ -34,34 +34,18 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleFocusButton.classList.remove('insideFocus');
       statusDisplay.textContent = formatTimer(0);
     }
-    totalDisplay.textContent = `Total focus time: ${formatTimer(state.totalFocusMillis)}`;
+    totalDisplay.textContent = `Total focus time: ${formatTimer(stateCache.totalFocusMillis)}`;
   };
-
-  function refreshElements() {
-    chrome.runtime.sendMessage({ command: "get_state" }, async response => {
-      if (!response) {
-        throw new Error(`No response for get_state: ${response}`);
-      }
-      updateElements(response);
-      inFocus = response.inFocus;
-    });
-  };
-  refreshElements();
 
   toggleFocusButton.addEventListener('click', async () => {
     let response;
-    const command = inFocus ? 'leave_focus' : 'enter_focus';
-    response = await chrome.runtime.sendMessage({ command });
-    if (!response) {
-      throw new Error(`No response for ${command}: ${response}`);
-    }
-    updateElements(response);
-    inFocus = response.inFocus;
+    const command = stateCache.inFocus ? 'leave_focus' : 'enter_focus';
+    await chrome.runtime.sendMessage({ command });
   });
 
   resetButton.addEventListener('click', async () => {
     await chrome.runtime.sendMessage({ command: 'reset_total' });
-    refreshElements();
+    updateElements();
   });
   
   openSidePanelLink?.addEventListener('click', async () => {
@@ -69,6 +53,15 @@ document.addEventListener('DOMContentLoaded', () => {
     await chrome.sidePanel.open({windowId: window.id});
   });
 
-  setInterval(refreshElements, 1000);
+  chrome.runtime.onMessage.addListener((msg, sender) => {
+    if (msg.event === 'state_changed') {
+      stateCache = msg.state;
+      updateElements();
+    } else {
+      console.log(`Discarding message from ${sender}:\n${JSON.stringify(msg)}`);
+    }
+  })
+  setInterval(updateElements, 250);
+  updateElements();
 });
 

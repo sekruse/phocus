@@ -29,6 +29,20 @@ function hideModal() {
   modal.classList.remove('modal-show');
 }
 
+function showModalForAdd() {
+  const modalData = document.getElementById('modal-data');
+  const startTimeInput = document.getElementById('starttime');
+  const stopTimeInput = document.getElementById('stoptime');
+  const notesInput = document.getElementById('notes');
+  modalData.removeAttribute('data-entry-id');
+  modalData.removeAttribute('data-entry-version');
+  const now = new Date();
+  startTimeInput.value = formatDateTimeInput(new Date(now - (30 * 60 * 1000)));  // now - 30m
+  stopTimeInput.value = formatDateTimeInput(now);
+  notesInput.value = 'manual entry';
+  showModal();
+}
+
 function showModalForEdit(entry) {
   const modalData = document.getElementById('modal-data');
   const startTimeInput = document.getElementById('starttime');
@@ -68,7 +82,8 @@ async function saveFromModal() {
       args: newEntry,
     });
   }
-  refreshHistory();
+  await refreshHistory();
+  hideModal();
 }
 modalSaveButton.addEventListener('click', saveFromModal);
 
@@ -106,6 +121,13 @@ async function refreshHistory(ev) {
     button = document.createElement('button');
     button.classList.add('button', 'button-red');
     button.innerText = 'Delete';
+    button.addEventListener('click', async (ev) => {
+      await chrome.runtime.sendMessage({
+        command: 'delete_from_history',
+        args: entry,
+      });
+      refreshHistory();
+    });
     td.appendChild(button);
     tr.appendChild(td);
     historyTableBody.appendChild(tr);
@@ -117,6 +139,5 @@ historyDatePicker.value = formatDateInput(new Date());
 historyDatePicker.addEventListener('input', (ev) => refreshHistory(ev));
 refreshHistory();
 
-addEntryButton.addEventListener('click', showModal);
+addEntryButton.addEventListener('click', showModalForAdd);
 modalCancelButton.addEventListener('click', hideModal);
-modalSaveButton.addEventListener('click', hideModal);

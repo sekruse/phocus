@@ -164,6 +164,28 @@ async function listHistory(filter) {
   });
 }
 
+async function addHistoryEntry(entry) {
+  if (!Number.isInteger(entry.startTimestamp) ||
+      !Number.isInteger(entry.stopTimestamp) ||
+      entry.startTimestamp >= entry.stopTimestamp) {
+    throw new Error(`Illegal start and stop timestamps: ${entry.startTimestamp}, ${entry.stopTimestamp}`);
+  }
+  const state = await getState();
+  const history = await getHistory();
+  const newEntry = {
+    id: state.nextHistoryId++,
+    version: 0,
+    startTimestamp: entry.startTimestamp,
+    stopTimestamp: entry.stopTimestamp,
+    notes: entry.notes,
+  };
+  history.push(newEntry);
+  // TODO - We don't know if the removed entry is part of the total focus time, so we don't know whether to subtract it.
+  await writeState();
+  await writeHistory();
+}
+
+
 async function updateHistoryEntry(entry) {
   if (!Number.isInteger(entry.startTimestamp) ||
       !Number.isInteger(entry.stopTimestamp) ||
@@ -279,6 +301,9 @@ const commands = {
   },
   "list_history": async function(args) {
     return listHistory(args);
+  },
+  "add_history_entry": async function(args) {
+    return addHistoryEntry(args);
   },
   "update_history_entry": async function(args) {
     return updateHistoryEntry(args);

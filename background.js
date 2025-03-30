@@ -4,6 +4,7 @@ const defaultState = {
   "focusStartTimestamp": 0,
   "idleStartTimestamp": 0,
   "totalFocusMillis": 0,
+  "totalFocusHistoryEntryIds": [],
   "nextAlarmTimestamp": 0,
   "nextHistoryId": 0,
 };
@@ -149,14 +150,16 @@ async function leaveFocus(stopTimestamp = Date.now()) {
   }
   await getHistory();
   state.inFocus = false;
-  historyCache.push({
+  const newEntry = {
     id: state.nextHistoryId,
     startTimestamp: state.focusStartTimestamp,
     stopTimestamp: stopTimestamp,
     notes: 'n/a',
     version: 0,
-  });
+  };
+  historyCache.push(newEntry);
   state.totalFocusMillis += stopTimestamp - state.focusStartTimestamp;
+  state.totalFocusHistoryEntryIds.push(newEntry.id);
   state.focusStartTimestamp = 0;
   state.nextAlarmTimestamp = 0;
   state.idleStartTimestamp = 0;
@@ -173,6 +176,7 @@ async function leaveFocus(stopTimestamp = Date.now()) {
 async function resetTotal() {
   const state = await getState();
   state.totalFocusMillis = 0;
+  state.totalFocusHistoryEntryIds = [];
   return writeState(state);
 }
 
@@ -190,6 +194,7 @@ async function addHistoryEntry(entry) {
       entry.startTimestamp >= entry.stopTimestamp) {
     throw new Error(`Illegal start and stop timestamps: ${entry.startTimestamp}, ${entry.stopTimestamp}`);
   }
+  // TODO - This code has quite some overlap with leaveFocus().
   const state = await getState();
   const history = await getHistory();
   const newEntry = {
@@ -200,7 +205,10 @@ async function addHistoryEntry(entry) {
     notes: entry.notes,
   };
   history.push(newEntry);
-  // TODO - We don't know if the removed entry is part of the total focus time, so we don't know whether to subtract it.
+  // We assume that the new entry should be included in the current total.
+  // There's no compelling reason but it's probably more often true than not.
+  state.totalFocusMillis += newEntry.stopTimestamp - newEntry.startTimestamp;
+  state.totalFocusHistoryEntryIds.push(newEntry.id);
   await writeState();
   await writeHistory();
 }
@@ -213,6 +221,7 @@ async function updateHistoryEntry(entry) {
     throw new Error(`Illegal start and stop timestamps: ${entry.startTimestamp}, ${entry.stopTimestamp}`);
   }
   const history = await getHistory();
+  const state = await getState();
   const index = history.findIndex((e) => e.id === entry.id);
   if (index === -1) {
     throw new Error(`No element with that ID: ${JSON.stringify(entry)}`);
@@ -221,17 +230,23 @@ async function updateHistoryEntry(entry) {
   if (e.version !== entry.version) {
     throw new Error(`Versions don't match: History provides ${JSON.stringify(e)}, argument is ${JSON.stringify(entry)}`);
   }
+  const previousMillis = e.stopTimestamp - e.startTimestamp;
   e.startTimestamp = entry.startTimestamp;
   e.stopTimestamp = entry.stopTimestamp;
   e.notes = entry.notes;
   e.version++;
-  // TODO - We don't know if the removed entry is part of the total focus time, so we don't know whether to subtract it.
+  if (state.totalFocusHistoryEntryIds.includes(e.id)) {
+    state.totalFocusMillis -= previousMillis;
+    state.totalFocusMillis += e.stopTimestamp - e.startTimestamp;
+    await writeState();
+  }
   await writeHistory();
 }
 
 async function deleteFromHistory(entry) {
   const history = await getHistory();
-  const index = history.findIndex((e) => e.id === entry.id);
+  const state = await getState();
+  let index = history.findIndex((e) => e.id === entry.id);
   if (index === -1) {
     throw new Error(`No element with that ID: ${JSON.stringify(entry)}`);
   }
@@ -240,7 +255,12 @@ async function deleteFromHistory(entry) {
     throw new Error(`Versions don't match: History provides ${JSON.stringify(e)}, argument is ${JSON.stringify(entry)}`);
   }
   history.splice(index, 1);
-  // TODO - We don't know if the removed entry is part of the total focus time, so we don't know whether to subtract it.
+  index = state.totalFocusHistoryEntryIds.indexOf(e.id)
+  if (index !== -1) {
+    state.totalFocusMillis -= e.stopTimestamp - e.startTimestamp;
+    state.totalFocusHistoryEntryIds.splice(index, 1);
+    await writeState();
+  }
   await writeHistory();
 }
 

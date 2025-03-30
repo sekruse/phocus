@@ -21,6 +21,8 @@ function formatDateTimeInput(date) {
   return `${formatDateInput(date)}T${formatTime(date)}`;
 }
 
+let historyDate = new Date(formatDateInput(new Date()));
+
 function showModal() {
   modal.classList.add('modal-show');
 }
@@ -87,16 +89,13 @@ async function saveFromModal() {
 }
 modalSaveButton.addEventListener('click', saveFromModal);
 
-async function refreshHistory(ev) {
-  if (historyDatePicker.value === '') {
-    return;
-  }
-  const fromTimestamp = new Date(historyDatePicker.value + "T00:00:00");
-  const untilTimestamp = new Date(fromTimestamp);
-  untilTimestamp.setDate(untilTimestamp.getDate() + 1);
+async function refreshHistory() {
+  const fromDate = historyDate;
+  const untilDate = new Date(fromDate);
+  untilDate.setDate(untilDate.getDate() + 1);
   const history = await chrome.runtime.sendMessage({
     command: "list_history",
-    args: { fromTimestamp: fromTimestamp.getTime(), untilTimestamp: untilTimestamp.getTime() },
+    args: { fromTimestamp: fromDate.getTime(), untilTimestamp: untilDate.getTime() },
   });
   const historyTableBody = document.querySelector('#history-table > tbody');
   historyTableBody.innerHTML = '';
@@ -126,18 +125,30 @@ async function refreshHistory(ev) {
         command: 'delete_from_history',
         args: entry,
       });
-      refreshHistory();
     });
     td.appendChild(button);
     tr.appendChild(td);
     historyTableBody.appendChild(tr);
   });
-  console.log(history);
 }
-
-historyDatePicker.value = formatDateInput(new Date());
-historyDatePicker.addEventListener('input', (ev) => refreshHistory(ev));
 refreshHistory();
+
+historyDatePicker.value = formatDateInput(historyDate);
+historyDatePicker.addEventListener('input', (ev) => {
+  if (historyDatePicker.value === '') {
+    return;
+  }
+  historyDate = new Date(historyDatePicker.value + 'T00:00:00');
+  refreshHistory();
+});
+
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg.event === 'history_changed') {
+    return refreshHistory();
+  } else {
+    console.log(`Ditching message from ${sender}:\n${JSON.stringify(msg)}`);
+  }
+});
 
 addEntryButton.addEventListener('click', showModalForAdd);
 modalCancelButton.addEventListener('click', hideModal);

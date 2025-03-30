@@ -48,9 +48,16 @@ async function writeHistory() {
   if (historyCache === null) {
     throw Error('historyCache is not loaded.');
   }
-  return await chrome.storage.local.set({ history: historyCache });
+  const result = await chrome.storage.local.set({ history: historyCache });
+  notifyHistoryChanged();  // fire and forget
+  return result;
 }
 
+function notifyHistoryChanged() {
+  return chrome.runtime.sendMessage({
+    event: 'history_changed',
+  });
+}
 
 let optionsCache = null;
 const defaultOptions = {

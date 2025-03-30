@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshElements();
   });
   
-  openSidePanelLink.addEventListener('click', async () => {
+  openSidePanelLink?.addEventListener('click', async () => {
     const window = await chrome.windows.getCurrent();
     await chrome.sidePanel.open({windowId: window.id});
   });

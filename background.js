@@ -164,6 +164,44 @@ async function listHistory(filter) {
   });
 }
 
+async function updateHistoryEntry(entry) {
+  if (!Number.isInteger(entry.startTimestamp) ||
+      !Number.isInteger(entry.stopTimestamp) ||
+      entry.startTimestamp >= entry.stopTimestamp) {
+    throw new Error(`Illegal start and stop timestamps: ${entry.startTimestamp}, ${entry.stopTimestamp}`);
+  }
+  const history = await getHistory();
+  const index = history.findIndex((e) => e.id === entry.id);
+  if (index === -1) {
+    throw new Error(`No element with that ID: ${JSON.stringify(entry)}`);
+  }
+  const e = history[index];
+  if (e.version !== entry.version) {
+    throw new Error(`Versions don't match: History provides ${JSON.stringify(e)}, argument is ${JSON.stringify(entry)}`);
+  }
+  e.startTimestamp = entry.startTimestamp;
+  e.stopTimestamp = entry.stopTimestamp;
+  e.notes = entry.notes;
+  e.version++;
+  // TODO - We don't know if the removed entry is part of the total focus time, so we don't know whether to subtract it.
+  await writeHistory();
+}
+
+async function deleteFromHistory(entry) {
+  const history = await getHistory();
+  const index = history.findIndex((e) => e.id === entry.id);
+  if (index === -1) {
+    throw new Error(`No element with that ID: ${JSON.stringify(entry)}`);
+  }
+  const e = history[index];
+  if (e.version !== entry.version) {
+    throw new Error(`Versions don't match: History provides ${JSON.stringify(e)}, argument is ${JSON.stringify(entry)}`);
+  }
+  history.splice(index, 1);
+  // TODO - We don't know if the removed entry is part of the total focus time, so we don't know whether to subtract it.
+  await writeHistory();
+}
+
 async function updateBadge() {
   const state = await getState();
   if (state.inFocus) {
@@ -242,6 +280,12 @@ const commands = {
   "list_history": async function(args) {
     return listHistory(args);
   },
+  "update_history_entry": async function(args) {
+    return updateHistoryEntry(args);
+  },
+  "delete_from_history": async function(args) {
+    return deleteFromHistory(args);
+  },
   "get_options": async function(args) {
     return getOptions();
   },
@@ -252,10 +296,9 @@ const commands = {
   
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
-    console.log(`Received request: ${JSON.stringify(request)}`);
     const impl = commands[request.command];
     if (!impl) {
-      throw new Error(`Undefined command in ${request}.`);
+      throw new Error(`Unknown command in ${JSON.stringify(request)}.`);
     }
     impl(request.args).then(sendResponse);
     return true;

@@ -76,6 +76,22 @@ a {
   background-color: #2196F3;
   color: #ffffff;
 }
+input {
+  background: transparent;
+  border-color: gray;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 5px;
+  padding: 5px;
+  color: white;
+}
+input::placeholder {
+  color: gray;
+}
+input.highlight-orange {
+  background: #feae0312;
+  border-color: #feae00;
+}
 #toggleFocusButton.inFocus {
   background-color: #feae00;
   color: #1e1e1e;

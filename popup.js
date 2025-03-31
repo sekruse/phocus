@@ -38,9 +38,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     totalDisplay.textContent = `Total focus time: ${formatTimer(stateCache.totalFocusMillis)}`;
     if (reset) {
       notesTextInput.value = stateCache.notes || '';
-      notesTextInput.classList.remove('background-lightorange');
+      notesTextInput.classList.remove('highlight-orange');
     } else {
-      notesTextInput.classList.toggle('background-lightorange', notesTextInput.value !== (stateCache.notes || ''));
+      notesTextInput.classList.toggle('highlight-orange', notesTextInput.value !== (stateCache.notes || ''));
     }
   };
 

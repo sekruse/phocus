@@ -21,7 +21,7 @@ function formatDateTimeInput(date) {
   return `${formatDateInput(date)}T${formatTime(date)}`;
 }
 
-let historyDate = new Date(formatDateInput(new Date()));
+let historyDate = new Date(formatDateInput(new Date()) + 'T00:00:00');
 
 function showModal() {
   modal.classList.add('modal-show');

@@ -6,14 +6,21 @@
 <body>
   <section>
     <h1>Controls</h1>
-    <div class="container">
-      <div class="fullRow">
-        <button class="button" id="toggleFocusButton" disabled>...</button>
+    <div class="flex flex-column">
+      <div class="flex flex-row">
+        <button class="button width100pct" id="toggleFocusButton" disabled>...</button>
       </div>
-      <div id="statusDisplay" class="fullRow">...</div>
-      <div id="totalDisplay">...</div>
-      <div>
-        <button class="button" id="resetButton">Reset total</button>
+      <div class="flex flex-row flex-row-time-display">
+        <div id="statusDisplay" class="font-medium">...</div>
+        <div class="font-medium margin-left">&middot;</div>
+        <div id="totalDisplay" class="font-small margin-left">...</div>
+      </div>
+      <div class="flex flex-row">
+        <input type="text" id="notesTextInput" placeholder="Notes" class="width-stretch">
+      </div>
+      <div class="flex flex-row flex-row-popup-footer">
+        <div></div>
+        <button class="button button-red fit-content" id="resetButton">Reset total</button>
       </div>
     </div>
   </section>

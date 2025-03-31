@@ -128,6 +128,12 @@ const alarmConfig = {
   periodInMinutes: 0.5,
 };
 
+async function setNotes(notes) {
+  const state = await getState();
+  state.notes = notes || undefined;
+  await writeState();
+}
+
 async function enterFocus() {
   const state = await getState();
   if (state.inFocus) {
@@ -154,7 +160,7 @@ async function leaveFocus(stopTimestamp = Date.now()) {
     id: state.nextHistoryId,
     startTimestamp: state.focusStartTimestamp,
     stopTimestamp: stopTimestamp,
-    notes: 'n/a',
+    notes: state.notes || 'n/a',
     version: 0,
   };
   historyCache.push(newEntry);
@@ -329,6 +335,9 @@ initialize();
 const commands = {
   "get_state": async function(args) {
     return getState();
+  },
+  "set_notes": async function(args) {
+    return setNotes(args);
   },
   "enter_focus": async function(args) {
     return enterFocus();

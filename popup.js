@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const resetButton = document.getElementById('resetButton');
   const statusDisplay = document.getElementById('statusDisplay');
   const totalDisplay = document.getElementById('totalDisplay');
+  const notesTextInput = document.getElementById('notesTextInput');
   const openSidePanelLink = document.getElementById('openSidePanelLink');
 
   let stateCache = await chrome.runtime.sendMessage({command: 'get_state'});
@@ -17,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return `${mins}m ${secs}s`;
   };
 
-  function updateElements() {
+  function updateElements(reset=false) {
     toggleFocusButton.disabled = false;
     if (stateCache.inFocus) {
       toggleFocusButton.textContent = 'Leave focus';
@@ -35,6 +36,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusDisplay.textContent = formatTimer(0);
     }
     totalDisplay.textContent = `Total focus time: ${formatTimer(stateCache.totalFocusMillis)}`;
+    if (reset) {
+      notesTextInput.value = stateCache.notes || '';
+      notesTextInput.classList.remove('background-lightorange');
+    } else {
+      notesTextInput.classList.toggle('background-lightorange', notesTextInput.value !== (stateCache.notes || ''));
+    }
   };
 
   toggleFocusButton.addEventListener('click', async () => {
@@ -48,6 +55,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateElements();
   });
   
+  notesTextInput.addEventListener('change', async (ev) => {
+    await chrome.runtime.sendMessage({
+      command: 'set_notes',
+      args: notesTextInput.value,
+    });
+  });
+
   openSidePanelLink?.addEventListener('click', async () => {
     const window = await chrome.windows.getCurrent();
     await chrome.sidePanel.open({windowId: window.id});
@@ -62,6 +76,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   })
   setInterval(updateElements, 250);
-  updateElements();
+  updateElements(reset=true);
 });
 

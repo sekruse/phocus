@@ -10,16 +10,46 @@ body.popup {
 a {
   color: #56acf0;
 }
-.container {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: 2fr 1fr;
+.flex {
+  display: flex;
 }
-.fullRow {
-  grid-column: 1 / span 2;
+.flex-column {
+  flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+.flex-row {
+  flex-flow: row nowrap;
+  justify-content: flex-start;
+  margin-bottom: 11px;
+}
+.flex-row-time-display {
+  align-items: baseline;
+}
+.flex-row-popup-footer {
+  justify-content: space-between;
+  align-items: baseline;
 }
 .width100pct {
   width: 100%
+}
+.margin-left {
+  margin-left: 5px;
+}
+.width-stretch {
+  width: stretch;
+}
+.width-fit-content {
+  width: fit-content;
+}
+.font-medium {
+  font-size: medium;
+}
+.font-small {
+  font-size: small;
+}
+.background-lightorange {
+  background-color: #f7e7b6ed;
 }
 .button {
   border-radius: 5px;
@@ -28,7 +58,6 @@ a {
   min-width: 30px;
   min-height: 30px;
   padding: 5px;
-  margin: 5px;
 }
 .button:hover, .button:focus {
   box-shadow: 0px 0px 4px 1px #ffffff;
@@ -54,23 +83,6 @@ a {
 #toggleFocusButton.outsideFocus {
   background-color: #2196F3;
   color: #ffffff;
-}
-#statusDisplay {
-  font-size: medium;
-}
-#totalDisplay {
-  padding: 2px;
-  grid-column: 1 / 2;
-  font-size: small;
-}
-#resetButton {
-  width: 100%;
-  padding: 2px;
-  background-color: #cb0202;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-size: small;
 }
 form.options {
   max-width: 500px;

@@ -24,8 +24,10 @@ function writeState(state=stateCache) {
   return result;
 }
 
+stateChangeSubscribers = [];
 function notifyStateChanged(state=stateCache) {
-  return chrome.runtime.sendMessage({
+  stateChangeSubscribers.forEach((subscriber) => subscriber(state));
+  chrome.runtime.sendMessage({
     event: 'state_changed',
     state: state,
   });
@@ -145,7 +147,6 @@ async function enterFocus() {
   state.nextAlarmTimestamp = state.focusStartTimestamp + (focusGoalMinutes * 60000);
   state.idleStartTimestamp = 0;
   state.focusStopTimestamp = 0;
-  updateBadge();
   chrome.alarms.create(updateAlarmName, alarmConfig);
   await writeState();
   return state;
@@ -163,14 +164,10 @@ async function leaveFocus(stopTimestamp = Date.now()) {
   state.idleStartTimestamp = 0;
   state.focusStopTimestamp = stopTimestamp;
   await addHistoryEntry({
-    startTimestamp: focusStartTimestamp,
+    startTimestamp: startTimestamp,
     stopTimestamp: stopTimestamp,
     notes: state.notes || 'n/a',
   });
-  updateBadge();
-  chrome.alarms.clear(updateAlarmName);
-  chrome.notifications.clear(idleNotificationName);
-  chrome.notifications.clear(focusGoalNotificationName);
   return state;
 }
 
@@ -276,6 +273,9 @@ async function updateBadge() {
     chrome.action.setBadgeText({ text: '' });
   }
 }
+stateChangeSubscribers.push((newState) => {
+  updateBadge();
+});
 
 async function notifyOfGoal() {
   const state = await getState();
@@ -289,6 +289,11 @@ async function notifyOfGoal() {
     buttons: [{ title: 'Remind me later' }, { title: 'Take a break' }],
   });
 }
+stateChangeSubscribers.push((newState) => {
+  if (!newState.inFocus) {
+    chrome.notifications.clear(focusGoalNotificationName);
+  }
+});
 
 async function notifyOfAutocancel() {
   await chrome.notifications.create(lockedNotificationName, {
@@ -299,6 +304,11 @@ async function notifyOfAutocancel() {
     requireInteraction: false,
   });
 }
+stateChangeSubscribers.push((newState) => {
+  if (newState.inFocus) {
+    chrome.notifications.clear(lockedNotificationName);
+  }
+});
 
 async function notifyOfIdleDetection() {
   const state = await getState();
@@ -312,6 +322,11 @@ async function notifyOfIdleDetection() {
     buttons: [{ title: 'Yes, I left my focus time.' }, { title: 'No, I was keeping my focus.' }],
   });
 }
+stateChangeSubscribers.push((newState) => {
+  if (!newState.inFocus) {
+    chrome.notifications.clear(idleNotificationName);
+  }
+});
 
 async function initialize() {
   const state = await getState();

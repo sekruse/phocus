@@ -206,15 +206,21 @@ input {
   cursor: pointer;
 }
 
+/* Tables */
 table {
   width: 100%;
   border-collapse: collapse;
 }
 th, td { 
   text-align: left;
+  padding: 5px 2px;
 }
 tr {
   border-bottom: 1px solid #6f6f6f;
+}
+.row-clickable:hover,
+.row-clickable:focus {
+  background-color: #2196F343;
 }
 
 .text-align-center {

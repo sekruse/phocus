@@ -2,6 +2,7 @@ const modal = document.getElementById("modal");
 const addEntryButton = document.getElementById("add-entry-button");
 const modalCancelButton = document.getElementById("modal-cancel-button");
 const modalSaveButton = document.getElementById("modal-save-button");
+const modalDeleteButton = document.getElementById("modal-delete-button");
 const historyDatePicker = document.getElementById('historyDatePicker');
 
 function formatDateInput(date) {
@@ -89,6 +90,22 @@ async function saveFromModal() {
 }
 modalSaveButton.addEventListener('click', saveFromModal);
 
+async function deleteFromModal() {
+  const modalData = document.getElementById('modal-data');
+  const id = modalData.getAttribute('data-entry-id');
+  const version = modalData.getAttribute('data-entry-version');
+  await chrome.runtime.sendMessage({
+    command: 'delete_from_history',
+    args: {
+      id: Number.parseInt(id),
+      version: Number.parseInt(version),
+    },
+  });
+  await refreshHistory();
+  hideModal();
+}
+modalDeleteButton.addEventListener('click', deleteFromModal);
+
 async function refreshHistory() {
   const fromDate = historyDate;
   const untilDate = new Date(fromDate);
@@ -101,6 +118,8 @@ async function refreshHistory() {
   historyTableBody.innerHTML = '';
   history.forEach((entry) => {
     const tr = document.createElement('tr');
+    tr.classList.add('row-clickable');
+    tr.addEventListener('click', (ev) => showModalForEdit(entry));
     let td = document.createElement('td');
     td.innerText = formatTime(new Date(entry.startTimestamp));
     tr.appendChild(td);
@@ -109,24 +128,6 @@ async function refreshHistory() {
     tr.appendChild(td);
     td = document.createElement('td');
     td.innerText = entry.notes;
-    tr.appendChild(td);
-    td = document.createElement('td');
-    td.classList.add('text-align-center');
-    let button = document.createElement('button');
-    button.classList.add('button', 'button-blue');
-    button.innerText = 'Edit';
-    button.addEventListener('click', (ev) => showModalForEdit(entry));
-    td.appendChild(button);
-    button = document.createElement('button');
-    button.classList.add('button', 'button-red');
-    button.innerText = 'Delete';
-    button.addEventListener('click', async (ev) => {
-      await chrome.runtime.sendMessage({
-        command: 'delete_from_history',
-        args: entry,
-      });
-    });
-    td.appendChild(button);
     tr.appendChild(td);
     historyTableBody.appendChild(tr);
   });

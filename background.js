@@ -156,29 +156,21 @@ async function leaveFocus(stopTimestamp = Date.now()) {
   if (!state.inFocus) {
     return state;
   }
-  await getHistory();
+  const startTimestamp = state.focusStartTimestamp;
   state.inFocus = false;
-  const newEntry = {
-    id: state.nextHistoryId,
-    startTimestamp: state.focusStartTimestamp,
-    stopTimestamp: stopTimestamp,
-    notes: state.notes || 'n/a',
-    version: 0,
-  };
-  historyCache.push(newEntry);
-  state.totalFocusMillis += stopTimestamp - state.focusStartTimestamp;
-  state.totalFocusHistoryEntryIds.push(newEntry.id);
   state.focusStartTimestamp = 0;
   state.nextAlarmTimestamp = 0;
   state.idleStartTimestamp = 0;
   state.focusStopTimestamp = stopTimestamp;
-  state.nextHistoryId++;
+  await addHistoryEntry({
+    startTimestamp: focusStartTimestamp,
+    stopTimestamp: stopTimestamp,
+    notes: state.notes || 'n/a',
+  });
   updateBadge();
   chrome.alarms.clear(updateAlarmName);
   chrome.notifications.clear(idleNotificationName);
   chrome.notifications.clear(focusGoalNotificationName);
-  await writeState();
-  await writeHistory();
   return state;
 }
 

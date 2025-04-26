@@ -22,6 +22,15 @@ function formatDateTimeInput(date) {
   return `${formatDateInput(date)}T${formatTime(date)}`;
 }
 
+function formatTimer(millis) {
+  const mins = Math.trunc(millis / 60000) % 60;
+  const hours = Math.trunc(millis / 3600000);
+  if (hours > 0) {
+    return `${hours}h ${mins}m`;
+  }
+  return `${mins}m`;
+};
+
 let historyDate = new Date(formatDateInput(new Date()) + 'T00:00:00');
 
 function showModal() {
@@ -116,21 +125,27 @@ async function refreshHistory() {
   });
   const historyTableBody = document.querySelector('#history-table > tbody');
   historyTableBody.innerHTML = '';
-  history.forEach((entry) => {
+  for (let i = 0; i < history.length; i++) {
+    const entry = history[i];
     const tr = document.createElement('tr');
     tr.classList.add('row-clickable');
     tr.addEventListener('click', (ev) => showModalForEdit(entry));
     let td = document.createElement('td');
-    td.innerText = formatTime(new Date(entry.startTimestamp));
+    td.innerHTML = formatTime(new Date(entry.startTimestamp));
+    if (i > 0) {
+      const prevEntry = history[i - 1];
+      td.innerHTML += `<span class="font-smaller text-blue margin-left">+${formatTimer(entry.startTimestamp - prevEntry.stopTimestamp)}</span>`;
+    }
     tr.appendChild(td);
     td = document.createElement('td');
-    td.innerText = formatTime(new Date(entry.stopTimestamp));
+    td.innerHTML = formatTime(new Date(entry.stopTimestamp));
+    td.innerHTML += `<span class="font-smaller text-orange margin-left">+${formatTimer(entry.stopTimestamp - entry.startTimestamp)}</span>`;
     tr.appendChild(td);
     td = document.createElement('td');
     td.innerText = entry.notes;
     tr.appendChild(td);
     historyTableBody.appendChild(tr);
-  });
+  }
 }
 refreshHistory();
 

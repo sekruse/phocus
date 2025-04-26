@@ -50,6 +50,9 @@ a {
 .font-small {
   font-size: small;
 }
+.font-smaller {
+  font-size: smaller;
+}
 /* Buttons */
 .button {
   border-radius: 5px;

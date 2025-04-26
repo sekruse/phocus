@@ -2,6 +2,7 @@ let stateCache = null;
 const defaultState = {
   "inFocus": false,
   "focusStartTimestamp": 0,
+  "focusStopTimestamp": 0,
   "idleStartTimestamp": 0,
   "totalFocusMillis": 0,
   "totalFocusHistoryEntryIds": [],
@@ -143,6 +144,7 @@ async function enterFocus() {
   state.focusStartTimestamp = Date.now();
   state.nextAlarmTimestamp = state.focusStartTimestamp + (focusGoalMinutes * 60000);
   state.idleStartTimestamp = 0;
+  state.focusStopTimestamp = 0;
   updateBadge();
   chrome.alarms.create(updateAlarmName, alarmConfig);
   await writeState();
@@ -169,6 +171,7 @@ async function leaveFocus(stopTimestamp = Date.now()) {
   state.focusStartTimestamp = 0;
   state.nextAlarmTimestamp = 0;
   state.idleStartTimestamp = 0;
+  state.focusStopTimestamp = stopTimestamp;
   state.nextHistoryId++;
   updateBadge();
   chrome.alarms.clear(updateAlarmName);

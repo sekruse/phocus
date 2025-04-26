@@ -20,20 +20,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateElements(reset=false) {
     toggleFocusButton.disabled = false;
+    toggleFocusButton.classList.toggle('button-blue', !stateCache.inFocus);
+    toggleFocusButton.classList.toggle('button-orange', stateCache.inFocus);
+    statusDisplay.classList.toggle('text-blue', !stateCache.inFocus)
+    statusDisplay.classList.toggle('text-orange', stateCache.inFocus)
     if (stateCache.inFocus) {
       toggleFocusButton.textContent = 'Leave focus';
-      if (!toggleFocusButton.classList.contains('inFocus')) {
-        toggleFocusButton.classList.add('inFocus');
-      }
-      toggleFocusButton.classList.remove('outsideFocus');
       statusDisplay.textContent = formatTimer(Date.now() - stateCache.focusStartTimestamp);
     } else {
       toggleFocusButton.textContent = 'Enter focus';
-      if (!toggleFocusButton.classList.contains('outsideFocus')) {
-        toggleFocusButton.classList.add('outsideFocus');
-      }
-      toggleFocusButton.classList.remove('insideFocus');
-      statusDisplay.textContent = formatTimer(0);
+      statusDisplay.textContent = formatTimer(Date.now() - stateCache.focusStopTimestamp);
     }
     totalDisplay.textContent = `Total focus time: ${formatTimer(stateCache.totalFocusMillis)}`;
     if (reset) {

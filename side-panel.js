@@ -125,6 +125,8 @@ async function refreshHistory() {
   });
   const historyTableBody = document.querySelector('#history-table > tbody');
   historyTableBody.innerHTML = '';
+  let totalFocusMillis = 0;
+  let totalPauseMillis = 0;
   for (let i = 0; i < history.length; i++) {
     const entry = history[i];
     const tr = document.createElement('tr');
@@ -134,15 +136,36 @@ async function refreshHistory() {
     td.innerHTML = formatTime(new Date(entry.startTimestamp));
     if (i > 0) {
       const prevEntry = history[i - 1];
-      td.innerHTML += `<span class="font-smaller text-blue margin-left">+${formatTimer(entry.startTimestamp - prevEntry.stopTimestamp)}</span>`;
+      const pauseMillis = entry.startTimestamp - prevEntry.stopTimestamp
+      td.innerHTML += `<span class="font-smaller text-blue margin-left">+${formatTimer(pauseMillis)}</span>`;
+      totalPauseMillis += pauseMillis;
     }
     tr.appendChild(td);
     td = document.createElement('td');
     td.innerHTML = formatTime(new Date(entry.stopTimestamp));
-    td.innerHTML += `<span class="font-smaller text-orange margin-left">+${formatTimer(entry.stopTimestamp - entry.startTimestamp)}</span>`;
+    const focusMillis = entry.stopTimestamp - entry.startTimestamp;
+    td.innerHTML += `<span class="font-smaller text-orange margin-left">+${formatTimer(focusMillis)}</span>`;
+    totalFocusMillis += focusMillis;
     tr.appendChild(td);
     td = document.createElement('td');
     td.innerText = entry.notes;
+    tr.appendChild(td);
+    historyTableBody.appendChild(tr);
+  }
+  if (history.length > 0) {
+    const firstEntry = history[0];
+    const lastEntry = history[history.length - 1];
+    const tr = document.createElement('tr');
+    tr.classList.add('row-footer');
+    let td = document.createElement('td');
+    td.innerHTML = formatTime(new Date(firstEntry.startTimestamp));
+    tr.appendChild(td);
+    td = document.createElement('td');
+    td.innerHTML = formatTime(new Date(lastEntry.stopTimestamp));
+    const focusMillis = lastEntry.stopTimestamp - lastEntry.startTimestamp;
+    tr.appendChild(td);
+    td = document.createElement('td');
+    td.innerHTML = `Focus: <span class="text-orange">${formatTimer(totalFocusMillis)}</span> &middot; Pauses: <span class="text-blue">${formatTimer(totalPauseMillis)}</span>`;
     tr.appendChild(td);
     historyTableBody.appendChild(tr);
   }

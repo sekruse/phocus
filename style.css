@@ -213,6 +213,7 @@ input {
 table {
   width: 100%;
   border-collapse: collapse;
+  margin: 10px 0px;
 }
 th, td { 
   text-align: left;
@@ -224,6 +225,14 @@ tr {
 .row-clickable:hover,
 .row-clickable:focus {
   background-color: #2196F343;
+  cursor: pointer;
+}
+.row-header {
+  border-bottom: 2px solid #6f6f6f;
+}
+.row-footer {
+  border-top: 2px solid #6f6f6f;
+  border-bottom: 2px double #6f6f6f;
 }
 
 .text-align-center {

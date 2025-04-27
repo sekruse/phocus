@@ -1,37 +1,42 @@
+import { calcHistoryStats, formatTimer } from './utils.js'
+
+async function loadHistoryStats() {
+  const now = new Date();
+  const fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const untilDate = new Date(fromDate);
+  untilDate.setDate(untilDate.getDate() + 1);
+  const history = await chrome.runtime.sendMessage({
+    command: "list_history",
+    args: { fromTimestamp: fromDate.getTime(), untilTimestamp: untilDate.getTime() },
+  });
+  return calcHistoryStats(history);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-  const toggleFocusButton = document.getElementById('toggleFocusButton');
-  const resetButton = document.getElementById('resetButton');
-  const statusDisplay = document.getElementById('statusDisplay');
-  const totalDisplay = document.getElementById('totalDisplay');
-  const notesTextInput = document.getElementById('notesTextInput');
-  const openSidePanelLink = document.getElementById('openSidePanelLink');
+  const toggleFocusButton = document.getElementById('toggle-focus-button');
+  const totalFocusDisplay = document.getElementById('total-focus-display');
+  const totalPauseDisplay = document.getElementById('total-pause-display');
+  const notesTextInput = document.getElementById('notes-text-input');
+  const openSidePanelLink = document.getElementById('open-side-panel-link');
 
   let stateCache = await chrome.runtime.sendMessage({command: 'get_state'});
-
-  function formatTimer(millis) {
-    const secs = Math.trunc(millis / 1000) % 60;
-    const mins = Math.trunc(millis / 60000) % 60;
-    const hours = Math.trunc(millis / 3600000);
-    if (hours > 0) {
-      return `${hours}h ${mins}m ${secs}s`;
-    }
-    return `${mins}m ${secs}s`;
-  };
+  let historyStatsCache = await loadHistoryStats();
 
   function updateElements(reset=false) {
     toggleFocusButton.disabled = false;
     toggleFocusButton.classList.toggle('button-blue', !stateCache.inFocus);
     toggleFocusButton.classList.toggle('button-orange', stateCache.inFocus);
-    statusDisplay.classList.toggle('text-blue', !stateCache.inFocus)
-    statusDisplay.classList.toggle('text-orange', stateCache.inFocus)
     if (stateCache.inFocus) {
-      toggleFocusButton.textContent = 'Leave focus';
-      statusDisplay.textContent = formatTimer(Date.now() - stateCache.focusStartTimestamp);
+      const activeFocusMillis = Date.now() - stateCache.focusStartTimestamp;
+      toggleFocusButton.textContent = `Leave focus (${formatTimer(activeFocusMillis)})`;
+      totalFocusDisplay.textContent = formatTimer(historyStatsCache.focusMillis + activeFocusMillis, false);
+      totalPauseDisplay.textContent = formatTimer(historyStatsCache.pauseMillis, false);
     } else {
-      toggleFocusButton.textContent = 'Enter focus';
-      statusDisplay.textContent = formatTimer(Date.now() - stateCache.focusStopTimestamp);
+      const activePauseMillis = Date.now() - stateCache.focusStopTimestamp;
+      toggleFocusButton.textContent = `Enter focus (${formatTimer(activePauseMillis)})`;
+      totalFocusDisplay.textContent = formatTimer(historyStatsCache.focusMillis, false);
+      totalPauseDisplay.textContent = formatTimer(historyStatsCache.pauseMillis + activePauseMillis, false);
     }
-    totalDisplay.textContent = `Total focus time: ${formatTimer(stateCache.totalFocusMillis)}`;
     if (reset) {
       notesTextInput.value = stateCache.notes || '';
       notesTextInput.classList.remove('highlight-orange');
@@ -46,11 +51,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     await chrome.runtime.sendMessage({ command });
   });
 
-  resetButton.addEventListener('click', async () => {
-    await chrome.runtime.sendMessage({ command: 'reset_total' });
-    updateElements();
-  });
-  
   notesTextInput.addEventListener('change', async (ev) => {
     await chrome.runtime.sendMessage({
       command: 'set_notes',
@@ -63,15 +63,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     await chrome.sidePanel.open({windowId: window.id});
   });
 
-  chrome.runtime.onMessage.addListener((msg, sender) => {
+  chrome.runtime.onMessage.addListener(async (msg, sender) => {
     if (msg.event === 'state_changed') {
       stateCache = msg.state;
+      updateElements();
+    } else if (msg.event === 'history_changed') {
+      historyStatsCache = await loadHistoryStats();
       updateElements();
     } else {
       console.log(`Discarding message from ${sender}:\n${JSON.stringify(msg)}`);
     }
   })
   setInterval(updateElements, 250);
-  updateElements(reset=true);
+  updateElements(true);
 });
 

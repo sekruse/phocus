@@ -1,35 +1,16 @@
+import {
+  formatTimer,
+  formatTime,
+  formatDateInput,
+  formatDateTimeInput,
+} from './utils.js';
+
 const modal = document.getElementById("modal");
 const addEntryButton = document.getElementById("add-entry-button");
 const modalCancelButton = document.getElementById("modal-cancel-button");
 const modalSaveButton = document.getElementById("modal-save-button");
 const modalDeleteButton = document.getElementById("modal-delete-button");
 const historyDatePicker = document.getElementById('historyDatePicker');
-
-function formatDateInput(date) {
-  const dd = new String(date.getDate()).padStart(2, '0');
-  const mm = new String(date.getMonth() + 1).padStart(2, '0');
-  const yyyy = new String(date.getFullYear());
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function formatTime(date) {
- const hh = new String(date.getHours()).padStart(2, '0');
- const mm = new String(date.getMinutes()).padStart(2, '0');
- return `${hh}:${mm}`;
-}
-
-function formatDateTimeInput(date) {
-  return `${formatDateInput(date)}T${formatTime(date)}`;
-}
-
-function formatTimer(millis) {
-  const mins = Math.trunc(millis / 60000) % 60;
-  const hours = Math.trunc(millis / 3600000);
-  if (hours > 0) {
-    return `${hours}h ${mins}m`;
-  }
-  return `${mins}m`;
-};
 
 let historyDate = new Date(formatDateInput(new Date()) + 'T00:00:00');
 
@@ -137,14 +118,14 @@ async function refreshHistory() {
     if (i > 0) {
       const prevEntry = history[i - 1];
       const pauseMillis = entry.startTimestamp - prevEntry.stopTimestamp
-      td.innerHTML += `<span class="font-smaller text-blue margin-left">+${formatTimer(pauseMillis)}</span>`;
+      td.innerHTML += `<span class="font-smaller text-blue margin-left">+${formatTimer(pauseMillis, false)}</span>`;
       totalPauseMillis += pauseMillis;
     }
     tr.appendChild(td);
     td = document.createElement('td');
     td.innerHTML = formatTime(new Date(entry.stopTimestamp));
     const focusMillis = entry.stopTimestamp - entry.startTimestamp;
-    td.innerHTML += `<span class="font-smaller text-orange margin-left">+${formatTimer(focusMillis)}</span>`;
+    td.innerHTML += `<span class="font-smaller text-orange margin-left">+${formatTimer(focusMillis, false)}</span>`;
     totalFocusMillis += focusMillis;
     tr.appendChild(td);
     td = document.createElement('td');
@@ -165,7 +146,7 @@ async function refreshHistory() {
     const focusMillis = lastEntry.stopTimestamp - lastEntry.startTimestamp;
     tr.appendChild(td);
     td = document.createElement('td');
-    td.innerHTML = `Focus: <span class="text-orange">${formatTimer(totalFocusMillis)}</span> &middot; Pauses: <span class="text-blue">${formatTimer(totalPauseMillis)}</span>`;
+    td.innerHTML = `Focus: <span class="text-orange">${formatTimer(totalFocusMillis, false)}</span> &middot; Pauses: <span class="text-blue">${formatTimer(totalPauseMillis, false)}</span>`;
     tr.appendChild(td);
     historyTableBody.appendChild(tr);
   }

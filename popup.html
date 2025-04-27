@@ -6,24 +6,23 @@
 <body class="popup">
   <div class="flex flex-column">
     <div class="flex flex-row">
-      <button class="button width100pct" id="toggleFocusButton" disabled>...</button>
+      <button class="button width-100pct" id="toggle-focus-button" disabled>...</button>
     </div>
 
-    <div class="flex flex-row flex-row-time-display">
-      <div id="statusDisplay" class="font-medium">...</div>
-      <div class="font-medium margin-left">&middot;</div>
-      <div id="totalDisplay" class="font-small margin-left">...</div>
+    <div class="flex flex-row flex-row-time-display font-medium">
+        Focus:&nbsp;<span id="total-focus-display" class="text-orange">...</span>
+        <span style="margin-left: 5px; margin-right: 5px;">&middot;</span>
+        Pause:&nbsp;<span id="total-pause-display" class="text-blue">...</span>
     </div>
 
     <div class="flex flex-row">
-      <input type="text" id="notesTextInput" placeholder="Notes" class="width-stretch">
+      <input type="text" id="notes-text-input" placeholder="Notes" class="width-stretch">
     </div>
 
     <div class="flex flex-row flex-row-popup-footer">
-      <a href="#" id="openSidePanelLink">Open side panel</a>
-      <button class="button button-red fit-content" id="resetButton">Reset total</button>
+      <a href="#" id="open-side-panel-link">Open side panel</a>
     </div>
   </div>
-  <script src="popup.js"></script>
+  <script src="popup.js" type="module"></script>
 </body>
 </html>

@@ -4,8 +4,6 @@ const defaultState = {
   "focusStartTimestamp": 0,
   "focusStopTimestamp": 0,
   "idleStartTimestamp": 0,
-  "totalFocusMillis": 0,
-  "totalFocusHistoryEntryIds": [],
   "nextAlarmTimestamp": 0,
   "nextHistoryId": 0,
 };
@@ -171,13 +169,6 @@ async function leaveFocus(stopTimestamp = Date.now()) {
   return state;
 }
 
-async function resetTotal() {
-  const state = await getState();
-  state.totalFocusMillis = 0;
-  state.totalFocusHistoryEntryIds = [];
-  return writeState(state);
-}
-
 async function listHistory(filter) {
   const history = await getHistory();
   return history.filter((entry) => {
@@ -203,10 +194,6 @@ async function addHistoryEntry(entry) {
     notes: entry.notes,
   };
   history.push(newEntry);
-  // We assume that the new entry should be included in the current total.
-  // There's no compelling reason but it's probably more often true than not.
-  state.totalFocusMillis += newEntry.stopTimestamp - newEntry.startTimestamp;
-  state.totalFocusHistoryEntryIds.push(newEntry.id);
   await writeState();
   await writeHistory();
 }
@@ -233,11 +220,6 @@ async function updateHistoryEntry(entry) {
   e.stopTimestamp = entry.stopTimestamp;
   e.notes = entry.notes;
   e.version++;
-  if (state.totalFocusHistoryEntryIds.includes(e.id)) {
-    state.totalFocusMillis -= previousMillis;
-    state.totalFocusMillis += e.stopTimestamp - e.startTimestamp;
-    await writeState();
-  }
   await writeHistory();
 }
 
@@ -253,12 +235,6 @@ async function deleteFromHistory(entry) {
     throw new Error(`Versions don't match: History provides ${JSON.stringify(e)}, argument is ${JSON.stringify(entry)}`);
   }
   history.splice(index, 1);
-  index = state.totalFocusHistoryEntryIds.indexOf(e.id)
-  if (index !== -1) {
-    state.totalFocusMillis -= e.stopTimestamp - e.startTimestamp;
-    state.totalFocusHistoryEntryIds.splice(index, 1);
-    await writeState();
-  }
   await writeHistory();
 }
 
@@ -354,9 +330,6 @@ const commands = {
   },
   "leave_focus": async function(args) {
     return leaveFocus();
-  },
-  "reset_total": async function(args) {
-    return resetTotal();
   },
   "list_history": async function(args) {
     return listHistory(args);

@@ -28,9 +28,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     toggleFocusButton.classList.toggle('button-orange', stateCache.inFocus);
     if (stateCache.inFocus) {
       const activeFocusMillis = Date.now() - stateCache.focusStartTimestamp;
+      const activePauseMillis = historyStatsCache.lastStopTimestamp ? stateCache.focusStartTimestamp - historyStatsCache.lastStopTimestamp : 0;
       toggleFocusButton.textContent = `Leave focus (${formatTimer(activeFocusMillis)})`;
       totalFocusDisplay.textContent = formatTimer(historyStatsCache.focusMillis + activeFocusMillis, false);
-      totalPauseDisplay.textContent = formatTimer(historyStatsCache.pauseMillis, false);
+      totalPauseDisplay.textContent = formatTimer(historyStatsCache.pauseMillis + activePauseMillis, false);
     } else {
       const activePauseMillis = Date.now() - stateCache.focusStopTimestamp;
       toggleFocusButton.textContent = `Enter focus (${formatTimer(activePauseMillis)})`;

@@ -13,6 +13,7 @@ const modalDeleteButton = document.getElementById("modal-delete-button");
 const historyDatePicker = document.getElementById('historyDatePicker');
 
 let historyDate = new Date(formatDateInput(new Date()) + 'T00:00:00');
+let stateCache = await chrome.runtime.sendMessage({command: 'get_state'});
 
 function showModal() {
   modal.classList.add('modal-show');
@@ -108,44 +109,67 @@ async function refreshHistory() {
   historyTableBody.innerHTML = '';
   let totalFocusMillis = 0;
   let totalPauseMillis = 0;
-  for (let i = 0; i < history.length; i++) {
-    const entry = history[i];
+  const createRow = function(options) {
     const tr = document.createElement('tr');
-    tr.classList.add('row-clickable');
-    tr.addEventListener('click', (ev) => showModalForEdit(entry));
+    if (options.onClick) {
+      tr.classList.add('row-clickable');
+      tr.addEventListener('click', options.onClick);
+    }
     let td = document.createElement('td');
-    td.innerHTML = formatTime(new Date(entry.startTimestamp));
-    if (i > 0) {
-      const prevEntry = history[i - 1];
-      const pauseMillis = entry.startTimestamp - prevEntry.stopTimestamp
-      td.innerHTML += `<span class="font-smaller text-blue margin-left">+${formatTimer(pauseMillis, false)}</span>`;
-      totalPauseMillis += pauseMillis;
+    if (options.startTimestamp) {
+      td.innerHTML = formatTime(new Date(options.startTimestamp));
+    }
+    if (options.pauseMillis) {
+      td.innerHTML += `<span class="font-smaller text-blue margin-left">+${formatTimer(options.pauseMillis, false)}</span>`;
     }
     tr.appendChild(td);
     td = document.createElement('td');
-    td.innerHTML = formatTime(new Date(entry.stopTimestamp));
-    const focusMillis = entry.stopTimestamp - entry.startTimestamp;
-    td.innerHTML += `<span class="font-smaller text-orange margin-left">+${formatTimer(focusMillis, false)}</span>`;
-    totalFocusMillis += focusMillis;
+    if (options.stopTimestamp) {
+      td.innerHTML = formatTime(new Date(options.stopTimestamp));
+    }
+    if (options.focusMillis) {
+      td.innerHTML += `<span class="font-smaller text-orange margin-left">+${formatTimer(options.focusMillis, false)}</span>`;
+    }
     tr.appendChild(td);
     td = document.createElement('td');
-    td.innerText = entry.notes;
+    td.innerText = options.notes;
     tr.appendChild(td);
+    return tr;
+  }
+  for (let i = 0; i < history.length; i++) {
+    const entry = history[i];
+    const options = {
+      startTimestamp: entry.startTimestamp,
+      stopTimestamp: entry.stopTimestamp,
+      focusMillis: entry.stopTimestamp - entry.startTimestamp,
+      pauseMillis: i > 0 ? entry.startTimestamp - history[i - 1].stopTimestamp : 0,
+      notes: entry.notes,
+      onClick: (ev) => showModalForEdit(entry),
+    };
+    totalFocusMillis += options.focusMillis;
+    totalPauseMillis += options.pauseMillis;
+    const tr = createRow(options)
+    historyTableBody.appendChild(tr);
+  }
+  if (stateCache.inFocus) {
+    const options = {
+      startTimestamp: stateCache.focusStartTimestamp,
+      pauseMillis: history.length > 0 ? stateCache.focusStartTimestamp - history[history.length - 1].stopTimestamp : 0,
+      notes: stateCache.notes || '',
+    }
+    totalPauseMillis += options.pauseMillis;
+    const tr = createRow(options);
     historyTableBody.appendChild(tr);
   }
   if (history.length > 0) {
     const firstEntry = history[0];
     const lastEntry = history[history.length - 1];
-    const tr = document.createElement('tr');
+    const tr = createRow({
+      startTimestamp: firstEntry.startTimestamp,
+      stopTimestamp: lastEntry.stopTimestamp,
+    });
     tr.classList.add('row-footer');
-    let td = document.createElement('td');
-    td.innerHTML = formatTime(new Date(firstEntry.startTimestamp));
-    tr.appendChild(td);
-    td = document.createElement('td');
-    td.innerHTML = formatTime(new Date(lastEntry.stopTimestamp));
-    const focusMillis = lastEntry.stopTimestamp - lastEntry.startTimestamp;
-    tr.appendChild(td);
-    td = document.createElement('td');
+    const td = tr.getElementsByTagName('td')[2];
     td.innerHTML = `Focus: <span class="text-orange">${formatTimer(totalFocusMillis, false)}</span> &middot; Pauses: <span class="text-blue">${formatTimer(totalPauseMillis, false)}</span>`;
     tr.appendChild(td);
     historyTableBody.appendChild(tr);
@@ -164,7 +188,10 @@ historyDatePicker.addEventListener('input', (ev) => {
 
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.event === 'history_changed') {
-    return refreshHistory();
+    refreshHistory();
+  } else if (msg.event === 'state_changed') {
+    stateCache = msg.state;
+    refreshHistory();
   } else {
     console.log(`Ditching message from ${sender}:\n${JSON.stringify(msg)}`);
   }

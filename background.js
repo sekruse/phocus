@@ -164,7 +164,7 @@ async function leaveFocus(stopTimestamp = Date.now()) {
   await addHistoryEntry({
     startTimestamp: startTimestamp,
     stopTimestamp: stopTimestamp,
-    notes: state.notes || 'n/a',
+    notes: state.notes || '',
   });
   return state;
 }

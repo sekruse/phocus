@@ -14,6 +14,7 @@ export function calcHistoryStats(history) {
   const stats = {
     focusMillis: 0,
     pauseMillis: 0,
+    lastStopTimestamp: 0,
   };
   if (!history) {
     return stats;
@@ -21,6 +22,7 @@ export function calcHistoryStats(history) {
   for (let i = 0; i < history.length; i++) {
     const entry = history[i];
     stats.focusMillis += entry.stopTimestamp - entry.startTimestamp;
+    stats.lastStopTimestamp = Math.max(stats.lastStopTimestamp, entry.stopTimestamp);
     if (i > 0) {
       const prevEntry = history[i-1];
       stats.pauseMillis += entry.startTimestamp - prevEntry.stopTimestamp;

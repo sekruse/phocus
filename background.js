@@ -135,13 +135,13 @@ async function setNotes(notes) {
   await writeState();
 }
 
-async function enterFocus() {
+async function enterFocus(startTimestamp) {
   const state = await getState();
   if (state.inFocus) {
     return state;
   }
   state.inFocus = true;
-  state.focusStartTimestamp = Date.now();
+  state.focusStartTimestamp = startTimestamp || Date.now();
   state.nextAlarmTimestamp = state.focusStartTimestamp + (focusGoalMinutes * 60000);
   state.idleStartTimestamp = 0;
   state.focusStopTimestamp = 0;
@@ -167,6 +167,21 @@ async function leaveFocus(stopTimestamp = Date.now()) {
     notes: state.notes || '',
   });
   return state;
+}
+
+async function resumeFocus() {
+  const state = await getState();
+  if (state.inFocus) {
+    throw new Error('Already in focus.');
+  }
+  const history = await getHistory();
+  if (!history) {
+    throw new Error('No history, cannot resume.');
+  }
+  history.sort((a, b) => a.stopTimestamp - b.stopTimestamp);
+  const latestEntry = history[history.length-1];
+  await enterFocus(latestEntry.startTimestamp);
+  await deleteFromHistory(latestEntry);
 }
 
 async function listHistory(filter) {
@@ -330,6 +345,9 @@ const commands = {
   },
   "leave_focus": async function(args) {
     return leaveFocus();
+  },
+  "resume_focus": async function(args) {
+    return resumeFocus();
   },
   "list_history": async function(args) {
     return listHistory(args);

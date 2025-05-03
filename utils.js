@@ -47,3 +47,28 @@ export function formatTime(date) {
 export function formatDateTimeInput(date) {
   return `${formatDateInput(date)}T${formatTime(date)}`;
 }
+
+function toggleDropDown(event) {
+  const dropDownId = event.target.getAttribute('data-dropdown-target');
+  const dropDown = document.getElementById(dropDownId);
+  const ownerId = event.target.getAttribute('data-dropdown-owner');
+  const owner = ownerId ? document.getElementById(ownerId) : event.target;
+  dropDown.style.top = `${owner.offsetTop + owner.offsetHeight}px`;
+  dropDown.style.left = `${owner.offsetLeft}px`
+  dropDown.style.left = `${owner.offsetLeft}px`
+  dropDown.style.width = `${owner.offsetWidth}px`
+  dropDown.classList.toggle('hidden');
+}
+
+function closeDropDown(event) {
+  event.currentTarget.classList.add('hidden');
+}
+
+export function initDropDowns() {
+  document.querySelectorAll('[data-dropdown-target]').forEach(element => {
+    element.addEventListener('click', toggleDropDown);
+  });
+  document.querySelectorAll('[data-dropdown]').forEach(element => {
+    element.addEventListener('click', closeDropDown);
+  });
+}

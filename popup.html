@@ -6,7 +6,16 @@
 <body class="popup">
   <div class="flex flex-column">
     <div class="flex flex-row">
-      <button class="button width-100pct" id="toggle-focus-button" disabled>...</button>
+      <div id="toggle-focus-button-combo" class="button-combo width-100pct">
+        <button id="toggle-focus-button" class="button button-orange width-fill-available">Enter focus</button>
+        <button id="toggle-focus-button-selector" class="button button-orange" data-dropdown-target="toggle-focus-dropdown" data-dropdown-owner="toggle-focus-button-combo">&#9662;</button>
+      </div>
+      <ul id="toggle-focus-dropdown" class="dropdown-menu hidden" data-dropdown>
+        <li id="toggle-focus-dropdown-resume">Resume latest focus</li>
+        <!-- TODO: Add option to retroactively enter focus. 
+        <li id="toggle-focus-dropdown-since-active">Enter focus since active</li>
+        -->
+      </ul>
     </div>
 
     <div class="flex flex-row flex-row-time-display font-medium">

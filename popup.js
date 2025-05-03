@@ -1,4 +1,4 @@
-import { calcHistoryStats, formatTimer } from './utils.js'
+import { calcHistoryStats, formatTimer, initDropDowns } from './utils.js'
 
 async function loadHistoryStats() {
   const now = new Date();
@@ -13,7 +13,10 @@ async function loadHistoryStats() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  initDropDowns();
   const toggleFocusButton = document.getElementById('toggle-focus-button');
+  const toggleFocusButtonSelector = document.getElementById('toggle-focus-button-selector');
+  const toggleFocusDropDownResume = document.getElementById('toggle-focus-dropdown-resume');
   const totalFocusDisplay = document.getElementById('total-focus-display');
   const totalPauseDisplay = document.getElementById('total-pause-display');
   const notesTextInput = document.getElementById('notes-text-input');
@@ -25,7 +28,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   function updateElements(reset=false) {
     toggleFocusButton.disabled = false;
     toggleFocusButton.classList.toggle('button-blue', !stateCache.inFocus);
+    toggleFocusButtonSelector.classList.toggle('button-blue', !stateCache.inFocus);
     toggleFocusButton.classList.toggle('button-orange', stateCache.inFocus);
+    toggleFocusButtonSelector.classList.toggle('button-orange', stateCache.inFocus);
+    toggleFocusButtonSelector.disabled = stateCache.inFocus;
     if (stateCache.inFocus) {
       const activeFocusMillis = Date.now() - stateCache.focusStartTimestamp;
       const activePauseMillis = historyStatsCache.lastStopTimestamp ? stateCache.focusStartTimestamp - historyStatsCache.lastStopTimestamp : 0;
@@ -51,6 +57,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const command = stateCache.inFocus ? 'leave_focus' : 'enter_focus';
     await chrome.runtime.sendMessage({ command });
   });
+
+  toggleFocusDropDownResume.addEventListener('click', async () => {
+    await chrome.runtime.sendMessage({ command: 'resume_focus' });
+  });
+
 
   notesTextInput.addEventListener('change', async (ev) => {
     await chrome.runtime.sendMessage({

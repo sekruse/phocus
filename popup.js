@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const toggleFocusButton = document.getElementById('toggle-focus-button');
   const toggleFocusButtonSelector = document.getElementById('toggle-focus-button-selector');
   const toggleFocusDropDownResume = document.getElementById('toggle-focus-dropdown-resume');
+  const toggleFocusDropDownSinceActive = document.getElementById('toggle-focus-dropdown-since-active');
   const totalFocusDisplay = document.getElementById('total-focus-display');
   const totalPauseDisplay = document.getElementById('total-pause-display');
   const notesTextInput = document.getElementById('notes-text-input');
@@ -60,6 +61,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   toggleFocusDropDownResume.addEventListener('click', async () => {
     await chrome.runtime.sendMessage({ command: 'resume_focus' });
+  });
+
+  toggleFocusDropDownSinceActive.addEventListener('click', async () => {
+    await chrome.runtime.sendMessage({
+      command: 'enter_focus',
+      args: {
+        startEvent: 'since_active',
+      },
+    });
   });
 
 

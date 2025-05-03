@@ -4,6 +4,7 @@ const defaultState = {
   "focusStartTimestamp": 0,
   "focusStopTimestamp": 0,
   "idleStartTimestamp": 0,
+  "activeStartTimestamp": 0,
   "nextAlarmTimestamp": 0,
   "nextHistoryId": 0,
 };
@@ -135,13 +136,36 @@ async function setNotes(notes) {
   await writeState();
 }
 
-async function enterFocus(startTimestamp) {
+async function enterFocus(args) {
   const state = await getState();
   if (state.inFocus) {
     return state;
   }
+  let startTimestamp;
+  if (args?.startTimestamp) {
+    startTimestamp = args.startTimestamp;
+  } else if (args?.startEvent) {
+    if (args.startEvent === 'since_active') {
+      if (!state.activeStartTimestamp) {
+        throw new Error('No start timestamp for activity recorded.');
+      }
+      startTimestamp = state.activeStartTimestamp;
+    } else {
+      throw new Error(`Unknown startEvent: ${args.startEvent}`);
+    }
+  } else {
+    startTimestamp = Date.now();
+  }
+  const history = await getHistory();
+  if (history) {
+    history.sort((a, b) => a.stopTimestamp - b.stopTimestamp);
+    const latestEntry = history[history.length-1];
+    if (startTimestamp < latestEntry.stopTimestamp) {
+      throw new Error(`Latest history entry ending at ${new Date(latestEntry.stopTimestamp)} precedes start timestamp at ${new Date(startTimestamp)}.`);
+    }
+  }
+  state.focusStartTimestamp = startTimestamp;
   state.inFocus = true;
-  state.focusStartTimestamp = startTimestamp || Date.now();
   state.nextAlarmTimestamp = state.focusStartTimestamp + (focusGoalMinutes * 60000);
   state.idleStartTimestamp = 0;
   state.focusStopTimestamp = 0;
@@ -180,8 +204,8 @@ async function resumeFocus() {
   }
   history.sort((a, b) => a.stopTimestamp - b.stopTimestamp);
   const latestEntry = history[history.length-1];
-  await enterFocus(latestEntry.startTimestamp);
   await deleteFromHistory(latestEntry);
+  await enterFocus({ startTimestamp: latestEntry.startTimestamp });
 }
 
 async function listHistory(filter) {
@@ -341,7 +365,7 @@ const commands = {
     return setNotes(args);
   },
   "enter_focus": async function(args) {
-    return enterFocus();
+    return enterFocus(args);
   },
   "leave_focus": async function(args) {
     return leaveFocus();
@@ -433,6 +457,8 @@ chrome.idle.setDetectionInterval(idleDetectionSeconds);
 chrome.idle.onStateChanged.addListener(async (newState) => {
   const state = await getState();
   if (newState === 'active') {
+    state.activeStartTimestamp = Date.now();
+    await writeState(state);
     return;
   } else if (newState === 'idle') {
     // Ask the user if they are still here and give them the option to retroactively leave their focus time.

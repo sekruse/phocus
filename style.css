@@ -127,7 +127,8 @@ a {
   border-style: solid;
   border-radius: 5px;
   border-color: #808080;
-  background: #565656;
+  background: #1a1a1aa3;
+  backdrop-filter: blur(3px);
   padding: 0;
   z-index: 1;
 }

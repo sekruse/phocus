@@ -7,7 +7,7 @@
   <div class="flex flex-column">
     <div class="flex flex-row">
       <div id="toggle-focus-button-combo" class="button-combo width-100pct">
-        <button id="toggle-focus-button" class="button button-orange width-fill-available">Enter focus</button>
+        <button id="toggle-focus-button" class="button button-orange font-bold width-fill-available">Enter focus</button>
         <button id="toggle-focus-button-selector" class="button button-orange" data-dropdown-target="toggle-focus-dropdown" data-dropdown-owner="toggle-focus-button-combo">&#9662;</button>
       </div>
       <ul id="toggle-focus-dropdown" class="dropdown-menu hidden" data-dropdown>
@@ -16,10 +16,10 @@
       </ul>
     </div>
 
-    <div class="flex flex-row flex-row-time-display font-medium">
-        Focus:&nbsp;<span id="total-focus-display" class="text-orange">...</span>
+    <div class="flex flex-row flex-row-time-display flex-center">
+        Focus:&nbsp;<span id="total-focus-display" class="text-orange font-bold">...</span>
         <span style="margin-left: 5px; margin-right: 5px;">&middot;</span>
-        Pause:&nbsp;<span id="total-pause-display" class="text-blue">...</span>
+        Pause:&nbsp;<span id="total-pause-display" class="text-blue font-bold">...</span>
     </div>
 
     <div class="flex flex-row">
@@ -27,7 +27,7 @@
     </div>
 
     <div class="flex flex-row flex-row-popup-footer">
-      <a href="#" id="open-side-panel-link">Open side panel</a>
+      <a href="#" id="open-side-panel-link" class="font-xsmall">Open side panel</a>
     </div>
   </div>
   <script src="popup.js" type="module"></script>

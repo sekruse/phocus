@@ -120,7 +120,7 @@ async function refreshHistory() {
       td.innerHTML = formatTime(new Date(options.startTimestamp));
     }
     if (options.pauseMillis) {
-      td.innerHTML += `<span class="font-smaller text-blue margin-left">+${formatTimer(options.pauseMillis, false)}</span>`;
+      td.innerHTML += `<span class="font-xsmall text-blue margin-left">+${formatTimer(options.pauseMillis, false)}</span>`;
     }
     tr.appendChild(td);
     td = document.createElement('td');
@@ -128,7 +128,7 @@ async function refreshHistory() {
       td.innerHTML = formatTime(new Date(options.stopTimestamp));
     }
     if (options.focusMillis) {
-      td.innerHTML += `<span class="font-smaller text-orange margin-left">+${formatTimer(options.focusMillis, false)}</span>`;
+      td.innerHTML += `<span class="font-xsmall text-orange margin-left">+${formatTimer(options.focusMillis, false)}</span>`;
     }
     tr.appendChild(td);
     td = document.createElement('td');
@@ -170,7 +170,7 @@ async function refreshHistory() {
     });
     tr.classList.add('row-footer');
     const td = tr.getElementsByTagName('td')[2];
-    td.innerHTML = `Focus: <span class="text-orange">${formatTimer(totalFocusMillis, false)}</span> &middot; Pauses: <span class="text-blue">${formatTimer(totalPauseMillis, false)}</span>`;
+    td.innerHTML = `Focus: <span class="text-orange font-bold">${formatTimer(totalFocusMillis, false)}</span> &middot; Pauses: <span class="text-blue font-bold">${formatTimer(totalPauseMillis, false)}</span>`;
     tr.appendChild(td);
     historyTableBody.appendChild(tr);
   }

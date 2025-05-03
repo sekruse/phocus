@@ -2,15 +2,24 @@
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  font-size: small;
 }
 body {
-  font-family: Arial, sans-serif;
   padding: 10px;
   background-color: #333333;
   color: white;
 }
 a {
-  color: #56acf0;
+  color: #2196F3;
+}
+h1 {
+  border-bottom: #6f6f6f solid 1px;
+  margin-bottom: 5px;
+  font-size: x-large;
+}
+label {
+  font-size: x-small;
 }
 .popup {
   width: 300px;
@@ -28,6 +37,9 @@ a {
   flex-flow: row nowrap;
   justify-content: flex-start;
   margin-bottom: 11px;
+}
+.flex-center {
+  justify-content: center;
 }
 .flex-row-time-display {
   align-items: baseline;
@@ -61,8 +73,14 @@ a {
 .font-small {
   font-size: small;
 }
+.font-xsmall {
+  font-size: x-small;
+}
 .font-smaller {
   font-size: smaller;
+}
+.font-bold {
+  font-weight: bold;
 }
 /* Buttons */
 .button {
@@ -83,7 +101,6 @@ a {
 }
 .button-big {
   padding: 10px 18px;
-  font-size: larger;
   font-weight: bold;
 }
 .button-red {
@@ -159,7 +176,7 @@ input::placeholder {
   color: gray;
 }
 input.highlight-orange {
-  background: #feae0312;
+  color: #feae00;
   border-color: #feae00;
 }
 #toggleFocusButton.inFocus {
@@ -187,7 +204,7 @@ button.options {
   gap: 8px 3px;
   grid-template-columns: 100px 100px auto;
 }
-section > * {
+section {
   padding-top: 20px;
 }
 
@@ -255,13 +272,6 @@ input {
   font-weight: bold;
 }
 
-.close:hover,
-.close:focus {
-  color: black;
-  text-decoration: none;
-  cursor: pointer;
-}
-
 /* Tables */
 table {
   width: 100%;
@@ -277,7 +287,7 @@ tr {
 }
 .row-clickable:hover,
 .row-clickable:focus {
-  background-color: #2196F343;
+  background-color: #757474;
   cursor: pointer;
 }
 .row-header {

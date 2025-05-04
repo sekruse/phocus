@@ -117,6 +117,8 @@ async function resetStorage() {
   historyCache = null;
   optionsCache = null;
   await chrome.storage.local.clear();
+  notifyStateChanged(await getState());
+  notifyHistoryChanged();
 }
 
 const updateAlarmName = 'phocus-update-alarm';
@@ -157,7 +159,7 @@ async function enterFocus(args) {
     startTimestamp = Date.now();
   }
   const history = await getHistory();
-  if (history) {
+  if (history.length > 0) {
     history.sort((a, b) => a.stopTimestamp - b.stopTimestamp);
     const latestEntry = history[history.length-1];
     if (startTimestamp < latestEntry.stopTimestamp) {

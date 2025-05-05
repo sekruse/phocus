@@ -1,14 +1,14 @@
-import { calcHistoryStats, formatTimer, initDropDowns } from './utils.js'
+import { unpack, calcHistoryStats, formatTimer, initDropDowns } from './utils.js'
 
 async function loadHistoryStats() {
   const now = new Date();
   const fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const untilDate = new Date(fromDate);
   untilDate.setDate(untilDate.getDate() + 1);
-  const history = await chrome.runtime.sendMessage({
+  const history = unpack(await chrome.runtime.sendMessage({
     command: "list_history",
     args: { fromTimestamp: fromDate.getTime(), untilTimestamp: untilDate.getTime() },
-  });
+  }));
   return calcHistoryStats(history);
 }
 
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const notesTextInput = document.getElementById('notes-text-input');
   const openSidePanelLink = document.getElementById('open-side-panel-link');
 
-  let stateCache = await chrome.runtime.sendMessage({command: 'get_state'});
+  let stateCache = unpack(await chrome.runtime.sendMessage({command: 'get_state'}));
   let historyStatsCache = await loadHistoryStats();
 
   function updateElements(reset=false) {
@@ -56,28 +56,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   toggleFocusButton.addEventListener('click', async () => {
     let response;
     const command = stateCache.inFocus ? 'leave_focus' : 'enter_focus';
-    await chrome.runtime.sendMessage({ command });
+    unpack(await chrome.runtime.sendMessage({ command }));
   });
 
   toggleFocusDropDownResume.addEventListener('click', async () => {
-    await chrome.runtime.sendMessage({ command: 'resume_focus' });
+    unpack(await chrome.runtime.sendMessage({ command: 'resume_focus' }));
   });
 
   toggleFocusDropDownSinceActive.addEventListener('click', async () => {
-    await chrome.runtime.sendMessage({
+    unpack(await chrome.runtime.sendMessage({
       command: 'enter_focus',
       args: {
         startEvent: 'since_active',
       },
-    });
+    }));
   });
 
 
   notesTextInput.addEventListener('change', async (ev) => {
-    await chrome.runtime.sendMessage({
+    unpack(await chrome.runtime.sendMessage({
       command: 'set_notes',
       args: notesTextInput.value,
-    });
+    }));
   });
 
   openSidePanelLink?.addEventListener('click', async () => {

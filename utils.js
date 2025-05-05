@@ -1,3 +1,10 @@
+export function unpack(response) {
+  if (!response.success) {
+    throw response.error;
+  }
+  return response.result;
+}
+
 export function formatTimer(millis, show_secs=true) {
   const secs = Math.trunc(millis / 1000) % 60;
   let result = show_secs ? ` ${secs}s` : '';

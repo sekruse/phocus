@@ -1,24 +1,16 @@
-document.addEventListener('DOMContentLoaded', () => {
+import { unpack } from './utils.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
   const focusGoalInput = document.getElementById('focusGoal');
   const snoozeInput = document.getElementById('snooze');
   const idleDetectionInput = document.getElementById('idleDetection');
   const optionsForm = document.getElementById('optionsForm');
   const resetStorageButton = document.getElementById('resetStorageButton');
 
-  chrome.runtime.sendMessage({ command: "get_options" }, async response => {
-    console.log(`get_options: ${response}`);
-    if (!response) {
-      throw new Error(`No response for get_state: ${response}`);
-    }
-    focusGoalInput.value = response.focusGoalMinutes;
-    snoozeInput.value = response.snoozeMinutes;
-    idleDetectionInput.value = response.idleDetectionSeconds;
-  });
-
   optionsForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     try {
-      let response = await chrome.runtime.sendMessage({
+      unpack(await chrome.runtime.sendMessage({
         command: 'set_options',
         args: {
           options: {
@@ -27,19 +19,21 @@ document.addEventListener('DOMContentLoaded', () => {
             idleDetectionSeconds: idleDetectionInput.value,
           },
         },
-      });
-      if (!response) {
-        throw new Error(`No response for set_options: ${response}`);
-      }
+      }));
       alert('Options saved.');
     } catch (e) {
-      alert(`An exception occurred while saving the configuration: ${e}`);
+      alert(`An exception occurred while saving the configuration: ${JSON.stringify(e)}`);
     }
   });
 
   resetStorageButton.addEventListener('click', async (ev) => {
-    const response = await chrome.runtime.sendMessage({
+    unpack(await chrome.runtime.sendMessage({
       command: 'reset_storage',
-    });
+    }));
   });
+
+  const options = unpack(await chrome.runtime.sendMessage({ command: "get_options" }));
+  focusGoalInput.value = options.focusGoalMinutes;
+  snoozeInput.value = options.snoozeMinutes;
+  idleDetectionInput.value = options.idleDetectionSeconds;
 });

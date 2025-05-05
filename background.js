@@ -398,16 +398,29 @@ const commands = {
   },
 };
   
-chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    const impl = commands[request.command];
-    if (!impl) {
-      throw new Error(`Unknown command in ${JSON.stringify(request)}.`);
-    }
-    impl(request.args).then(sendResponse);
-    return true;
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  const impl = commands[request.command];
+  if (!impl) {
+    throw new Error(`Unknown command in ${JSON.stringify(request)}.`);
   }
-);
+  impl(request.args)
+    .catch(err => {
+      sendResponse({
+        success: false,
+        error: {
+          name: err.name,
+          message: err.message,
+        },
+      })
+    })
+    .then(result => {
+      sendResponse({
+        success: true,
+        result: result,
+      })
+    });
+  return true;
+});
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === updateAlarmName) {

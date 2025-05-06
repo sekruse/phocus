@@ -17,11 +17,13 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
   let stateCache = unpack(await chrome.runtime.sendMessage({command: 'get_state'}));
 
   function showModal() {
-    modal.classList.add('modal-show');
+    modal.classList.remove('hidden', 'animate-vanish', 'animate-appear');
+    modal.classList.add('animate-appear');
   }
 
   function hideModal() {
-    modal.classList.remove('modal-show');
+    modal.classList.remove('animate-appear');
+    modal.classList.add('animate-vanish');
   }
 
   function showModalForAdd() {

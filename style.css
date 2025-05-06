@@ -216,7 +216,6 @@ section {
 }
 
 .modal {
-  display: none; 
   position: fixed;
   z-index: 1;
   left: 0;
@@ -225,16 +224,14 @@ section {
   height: 100%;
   overflow: auto;
   background-color: #808080b3; /* Modal background is now transparent */
-}
-
-.modal-show {
-  display: block;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
   background-color: #333333;
   margin: 15% auto;
   border: 1px solid #888;
+  border-radius: 10px;
   width: 80%;
   display: flex;
   flex-flow: column nowrap;
@@ -328,7 +325,7 @@ tr {
   color: #a2ffa6;
 }
 .animate-appear {
-  animation-duration: 0.7s;
+  animation-duration: 0.4s;
   animation-name: appear;
   animation-iteration-count: 1;
   animation-direction: normal;
@@ -336,7 +333,7 @@ tr {
 }
 
 .animate-vanish {
-  animation-duration: 0.7s;
+  animation-duration: 0.4s;
   animation-name: vanish;
   animation-iteration-count: 1;
   animation-direction: normal;
@@ -345,13 +342,11 @@ tr {
 
 @keyframes appear {
   from {
-    translate: 0 100%;
     opacity: 0;
     filter: blur(10px);
     display: none;
   }
   to {
-    translate: 0 0;
     opacity: 100%;
     filter: none;
     display: block;
@@ -360,13 +355,11 @@ tr {
 
 @keyframes vanish {
   from {
-    translate: 0 0;
     opacity: 100%;
     filter: none;
     display: block;
   }
   to {
-    translate: 0 100%;
     opacity: 0;
     filter: blur(10px);
     display: none;

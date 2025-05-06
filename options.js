@@ -1,15 +1,15 @@
-import { unpack } from './utils.js';
+import { unpack, initToast, showToast, withExceptionToast } from './utils.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
+  initToast();
   const focusGoalInput = document.getElementById('focusGoal');
   const snoozeInput = document.getElementById('snooze');
   const idleDetectionInput = document.getElementById('idleDetection');
   const optionsForm = document.getElementById('optionsForm');
   const resetStorageButton = document.getElementById('resetStorageButton');
 
-  optionsForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    try {
+  optionsForm.addEventListener('submit', withExceptionToast(async (event) => {
+      event.preventDefault();
       unpack(await chrome.runtime.sendMessage({
         command: 'set_options',
         args: {
@@ -20,20 +20,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           },
         },
       }));
-      alert('Options saved.');
-    } catch (e) {
-      alert(`An exception occurred while saving the configuration: ${JSON.stringify(e)}`);
-    }
-  });
+      showToast('Options saved.', 3000 /*ms*/);
+  }));
 
-  resetStorageButton.addEventListener('click', async (ev) => {
-    unpack(await chrome.runtime.sendMessage({
+  resetStorageButton.addEventListener('click', withExceptionToast(async (ev) => {
+    const response = unpack(await chrome.runtime.sendMessage({
       command: 'reset_storage',
     }));
-  });
+  }));
 
   const options = unpack(await chrome.runtime.sendMessage({ command: "get_options" }));
   focusGoalInput.value = options.focusGoalMinutes;
   snoozeInput.value = options.snoozeMinutes;
   idleDetectionInput.value = options.idleDetectionSeconds;
-});
+}));

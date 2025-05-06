@@ -1,3 +1,5 @@
+import { UserException } from './utils.js';
+
 let stateCache = null;
 const defaultState = {
   "inFocus": false,
@@ -23,7 +25,7 @@ function writeState(state=stateCache) {
   return result;
 }
 
-stateChangeSubscribers = [];
+const stateChangeSubscribers = [];
 function notifyStateChanged(state=stateCache) {
   stateChangeSubscribers.forEach((subscriber) => subscriber(state));
   chrome.runtime.sendMessage({
@@ -49,7 +51,7 @@ async function getHistory() {
 
 async function writeHistory() {
   if (historyCache === null) {
-    throw Error('historyCache is not loaded.');
+    throw new Error('historyCache is not loaded.');
   }
   const result = await chrome.storage.local.set({ history: historyCache });
   notifyHistoryChanged();  // fire and forget
@@ -79,22 +81,22 @@ async function getOptions() {
 
 function vetOptions(options) {
   if (!Object.hasOwn(options, 'focusGoalMinutes')) {
-    throw new Error(`focusGoalMinutes are missing in ${options}`);
+    throw new UserException(`Focus goal minutes are missing in ${JSON.stringify(options)}`);
   }
   if (!(options.focusGoalMinutes > 0 && options.focusGoalMinutes <= 240)) {
-    throw new Error(`focusGoalMinutes should be between 0 and 240, is ${options.focusGoalMinutes}`);
+    throw new UserException(`Focus goal minutes should be between 0 and 240, is ${options.focusGoalMinutes}`);
   }
   if (!Object.hasOwn(options, 'snoozeMinutes')) {
-    throw new Error(`snoozeMinutes are missing in ${options}`);
+    throw new UserException(`Snooze minutes are missing in ${JSON.stringify(options)}`);
   }
   if (!(options.snoozeMinutes > 0 && options.snoozeMinutes <= 60)) {
-    throw new Error(`snoozeMinutes should be between 0 and 60, is ${options.snoozeMinutes}`);
+    throw new UserException(`Snooze minutes should be between 0 and 60, is ${options.snoozeMinutes}`);
   }
   if (!Object.hasOwn(options, 'idleDetectionSeconds')) {
-    throw new Error(`idleDetectionSeconds are missing in ${options}`)
+    throw new UserException(`Idle detection seconds are missing in ${JSON.stringify(options)}`);
   }
   if (!(options.idleDetectionSeconds > 0 && options.idleDetectionSeconds <= 1800)) {
-    throw new Error(`idleDetectionSeconds should be between 0 and 1800, is ${options.idleDetectionSeconds}`);
+    throw new UserException(`Idle detection seconds should be between 0 and 1800, is ${options.idleDetectionSeconds}`);
   }
 };
 
@@ -149,7 +151,7 @@ async function enterFocus(args) {
   } else if (args?.startEvent) {
     if (args.startEvent === 'since_active') {
       if (!state.activeStartTimestamp) {
-        throw new Error('No start timestamp for activity recorded.');
+        throw new UserException('No start timestamp recorded since when the computer has been active. Cannot record focus time since then.');
       }
       startTimestamp = state.activeStartTimestamp;
     } else {
@@ -163,7 +165,7 @@ async function enterFocus(args) {
     history.sort((a, b) => a.stopTimestamp - b.stopTimestamp);
     const latestEntry = history[history.length-1];
     if (startTimestamp < latestEntry.stopTimestamp) {
-      throw new Error(`Latest history entry ending at ${new Date(latestEntry.stopTimestamp)} precedes start timestamp at ${new Date(startTimestamp)}.`);
+      throw new UserException(`Latest history entry ending at ${new Date(latestEntry.stopTimestamp)} precedes start timestamp at ${new Date(startTimestamp)}.`);
     }
   }
   state.focusStartTimestamp = startTimestamp;
@@ -198,11 +200,11 @@ async function leaveFocus(stopTimestamp = Date.now()) {
 async function resumeFocus() {
   const state = await getState();
   if (state.inFocus) {
-    throw new Error('Already in focus.');
+    throw new UserException('Already in focus. Cannot resume the previous focus block.');
   }
   const history = await getHistory();
   if (!history) {
-    throw new Error('No history, cannot resume.');
+    throw new UserException('No history, cannot resume previous focus block.');
   }
   history.sort((a, b) => a.stopTimestamp - b.stopTimestamp);
   const latestEntry = history[history.length-1];
@@ -219,10 +221,14 @@ async function listHistory(filter) {
 }
 
 async function addHistoryEntry(entry) {
-  if (!Number.isInteger(entry.startTimestamp) ||
-      !Number.isInteger(entry.stopTimestamp) ||
-      entry.startTimestamp >= entry.stopTimestamp) {
-    throw new Error(`Illegal start and stop timestamps: ${entry.startTimestamp}, ${entry.stopTimestamp}`);
+  if (!Number.isInteger(entry.startTimestamp)) {
+    throw new UserException(`Bad start timestamp: ${entry.startTimestamp}`);
+  }
+  if (!Number.isInteger(entry.stopTimestamp)) {
+    throw new UserException(`Bad stop timestamp: ${entry.stopTimestamp}`);
+  }
+  if (entry.startTimestamp >= entry.stopTimestamp) {
+    throw new UserException(`Start time before stop time: ${new Date(entry.startTimestamp)}, ${new Date(entry.stopTimestamp)}`);
   }
   // TODO - This code has quite some overlap with leaveFocus().
   const state = await getState();
@@ -241,20 +247,24 @@ async function addHistoryEntry(entry) {
 
 
 async function updateHistoryEntry(entry) {
-  if (!Number.isInteger(entry.startTimestamp) ||
-      !Number.isInteger(entry.stopTimestamp) ||
-      entry.startTimestamp >= entry.stopTimestamp) {
-    throw new Error(`Illegal start and stop timestamps: ${entry.startTimestamp}, ${entry.stopTimestamp}`);
+  if (!Number.isInteger(entry.startTimestamp)) {
+    throw new UserException(`Bad start timestamp: ${entry.startTimestamp}`);
+  }
+  if (!Number.isInteger(entry.stopTimestamp)) {
+    throw new UserException(`Bad stop timestamp: ${entry.stopTimestamp}`);
+  }
+  if (entry.startTimestamp >= entry.stopTimestamp) {
+    throw new UserException(`Start time before stop time: ${new Date(entry.startTimestamp)}, ${new Date(entry.stopTimestamp)}`);
   }
   const history = await getHistory();
   const state = await getState();
   const index = history.findIndex((e) => e.id === entry.id);
   if (index === -1) {
-    throw new Error(`No element with that ID: ${JSON.stringify(entry)}`);
+    throw new UserException(`No recorded focus block with that ID: ${JSON.stringify(entry)}`);
   }
   const e = history[index];
   if (e.version !== entry.version) {
-    throw new Error(`Versions don't match: History provides ${JSON.stringify(e)}, argument is ${JSON.stringify(entry)}`);
+    throw new UserException(`Versions don't match: Recorded focus block is ${JSON.stringify(e)}, provided block is ${JSON.stringify(entry)}`);
   }
   const previousMillis = e.stopTimestamp - e.startTimestamp;
   e.startTimestamp = entry.startTimestamp;
@@ -269,11 +279,11 @@ async function deleteFromHistory(entry) {
   const state = await getState();
   let index = history.findIndex((e) => e.id === entry.id);
   if (index === -1) {
-    throw new Error(`No element with that ID: ${JSON.stringify(entry)}`);
+    throw new UserException(`No recorded focus block with that ID: ${JSON.stringify(entry)}`);
   }
   const e = history[index];
   if (e.version !== entry.version) {
-    throw new Error(`Versions don't match: History provides ${JSON.stringify(e)}, argument is ${JSON.stringify(entry)}`);
+    throw new UserException(`Versions don't match: Recorded focus block is ${JSON.stringify(e)}, provided block is ${JSON.stringify(entry)}`);
   }
   history.splice(index, 1);
   await writeHistory();

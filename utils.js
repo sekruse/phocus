@@ -5,6 +5,13 @@ export function unpack(response) {
   return response.result;
 }
 
+export class UserException {
+  constructor(message) {
+    this.name = 'UserException';
+    this.message = message;
+  }
+}
+
 export function formatTimer(millis, show_secs=true) {
   const secs = Math.trunc(millis / 1000) % 60;
   let result = show_secs ? ` ${secs}s` : '';
@@ -78,4 +85,48 @@ export function initDropDowns() {
   document.querySelectorAll('[data-dropdown]').forEach(element => {
     element.addEventListener('click', closeDropDown);
   });
+}
+
+export function initToast() {
+  const toastClose = document.getElementById('toast-close');
+  toastClose.addEventListener('click', () => hideToast());
+}
+
+export function showToast(message, timeoutMillis, style) {
+  const toast = document.getElementById('toast');
+  const toastContent = document.getElementById('toast-content');
+  toast.classList.remove('toast-red', 'toast-green');
+  if (style) {
+    toast.classList.add(style);
+  }
+  toastContent.innerText = message;
+  toast.classList.remove('hidden', 'animate-vanish', 'animate-appear');
+  toast.classList.add('animate-appear');
+  if (timeoutMillis) {
+    setTimeout(() => { hideToast(message) }, timeoutMillis);
+  }
+}
+
+export function hideToast(expectedMessage) {
+  const toast = document.getElementById('toast');
+  const toastContent = document.getElementById('toast-content');
+  if (!expectedMessage || toastContent.innerText === expectedMessage) {
+    toast.classList.remove('animate-appear');
+    toast.classList.add('animate-vanish');
+  }
+}
+
+export function withExceptionToast(func) {
+  return async (a, b, c, d, e) => {
+    try {
+      return await func(a, b, c, d, e);
+    } catch (err) {
+      if (err.name === 'UserException') {
+        showToast(`An error occurred: ${err.message}`, null, 'toast-red');
+      } else {
+        showToast('Oops, something went wrong... :/', 5000 /*ms*/, 'toast-red');
+        throw err;
+      }
+    }
+  };
 }

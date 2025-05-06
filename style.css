@@ -36,7 +36,6 @@ label {
 .flex-row {
   flex-flow: row nowrap;
   justify-content: flex-start;
-  margin-bottom: 11px;
 }
 .flex-center {
   justify-content: center;
@@ -62,6 +61,9 @@ label {
 }
 .margin-left {
   margin-left: 5px;
+}
+margin-top {
+  margin-top: 5px;
 }
 .hidden {
   display: none;
@@ -119,6 +121,10 @@ label {
   background-color: #2196F3;
   color: #ffffff;
 }
+.button-transparent {
+  background-color: #0000;
+  color: #aaa;
+}
 .button-combo {
   height: fit-content;
   display: flex;
@@ -146,6 +152,7 @@ label {
   border-color: #808080;
   background: #1a1a1aa3;
   backdrop-filter: blur(3px);
+  box-shadow: 0px 2px 6px 1px #000000;
   padding: 0;
   z-index: 1;
 }
@@ -265,12 +272,6 @@ input {
   width: 100%;
 }
 
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-}
 
 /* Tables */
 table {
@@ -300,4 +301,74 @@ tr {
 
 .text-align-center {
   text-align: center;
+}
+
+.toast {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  max-width: 260px;
+  min-width: 60%;
+  margin: 20px;
+  padding: 10px;
+  border-style: solid;
+  border-color: #808080;
+  border-radius: 5px;
+  background: #1a1a1aa3;
+  backdrop-filter: blur(3px);
+  box-shadow: 0px 2px 6px 1px #000000;
+  z-index: 3;
+}
+.toast-red {
+  border-color: #b00000;
+  color: #ff9f9f;
+}
+.toast-green {
+  border-color: #007e05;
+  color: #a2ffa6;
+}
+.animate-appear {
+  animation-duration: 0.7s;
+  animation-name: appear;
+  animation-iteration-count: 1;
+  animation-direction: normal;
+  animation-fill-mode: forwards;
+}
+
+.animate-vanish {
+  animation-duration: 0.7s;
+  animation-name: vanish;
+  animation-iteration-count: 1;
+  animation-direction: normal;
+  animation-fill-mode: forwards;
+}
+
+@keyframes appear {
+  from {
+    translate: 0 100%;
+    opacity: 0;
+    filter: blur(10px);
+    display: none;
+  }
+  to {
+    translate: 0 0;
+    opacity: 100%;
+    filter: none;
+    display: block;
+  }
+}
+
+@keyframes vanish {
+  from {
+    translate: 0 0;
+    opacity: 100%;
+    filter: none;
+    display: block;
+  }
+  to {
+    translate: 0 100%;
+    opacity: 0;
+    filter: blur(10px);
+    display: none;
+  }
 }

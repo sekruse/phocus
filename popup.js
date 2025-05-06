@@ -1,4 +1,4 @@
-import { unpack, calcHistoryStats, formatTimer, initDropDowns } from './utils.js'
+import { unpack, calcHistoryStats, formatTimer, initDropDowns, initToast, showToast, withExceptionToast } from './utils.js'
 
 async function loadHistoryStats() {
   const now = new Date();
@@ -12,8 +12,9 @@ async function loadHistoryStats() {
   return calcHistoryStats(history);
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
   initDropDowns();
+  initToast();
   const toggleFocusButton = document.getElementById('toggle-focus-button');
   const toggleFocusButtonSelector = document.getElementById('toggle-focus-button-selector');
   const toggleFocusDropDownResume = document.getElementById('toggle-focus-dropdown-resume');
@@ -53,39 +54,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  toggleFocusButton.addEventListener('click', async () => {
+  toggleFocusButton.addEventListener('click', withExceptionToast(async () => {
     let response;
     const command = stateCache.inFocus ? 'leave_focus' : 'enter_focus';
     unpack(await chrome.runtime.sendMessage({ command }));
-  });
+  }));
 
-  toggleFocusDropDownResume.addEventListener('click', async () => {
+  toggleFocusDropDownResume.addEventListener('click', withExceptionToast(async () => {
     unpack(await chrome.runtime.sendMessage({ command: 'resume_focus' }));
-  });
+  }));
 
-  toggleFocusDropDownSinceActive.addEventListener('click', async () => {
+  toggleFocusDropDownSinceActive.addEventListener('click', withExceptionToast(async () => {
     unpack(await chrome.runtime.sendMessage({
       command: 'enter_focus',
       args: {
         startEvent: 'since_active',
       },
     }));
-  });
+  }));
 
 
-  notesTextInput.addEventListener('change', async (ev) => {
+  notesTextInput.addEventListener('change', withExceptionToast(async (ev) => {
     unpack(await chrome.runtime.sendMessage({
       command: 'set_notes',
       args: notesTextInput.value,
     }));
-  });
+  }));
 
-  openSidePanelLink?.addEventListener('click', async () => {
+  openSidePanelLink?.addEventListener('click', withExceptionToast(async () => {
     const window = await chrome.windows.getCurrent();
     await chrome.sidePanel.open({windowId: window.id});
-  });
+  }));
 
-  chrome.runtime.onMessage.addListener(async (msg, sender) => {
+  chrome.runtime.onMessage.addListener(withExceptionToast(async (msg, sender) => {
     if (msg.event === 'state_changed') {
       stateCache = msg.state;
       updateElements();
@@ -95,8 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
       console.log(`Discarding message from ${sender}:\n${JSON.stringify(msg)}`);
     }
-  })
+  }))
   setInterval(updateElements, 250);
   updateElements(true);
-});
-
+}));

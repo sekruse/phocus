@@ -1,8 +1,7 @@
-import { unpack, calcHistoryStats, formatTimer, initDropDowns, initToast, showToast, withExceptionToast } from './utils.js'
+import { unpack, calcStartOfDay, calcHistoryStats, formatTimer, initDropDowns, initToast, showToast, withExceptionToast } from './utils.js'
 
 async function loadHistoryStats() {
-  const now = new Date();
-  const fromDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const fromDate = calcStartOfDay(new Date(), 4);
   const untilDate = new Date(fromDate);
   untilDate.setDate(untilDate.getDate() + 1);
   const history = unpack(await chrome.runtime.sendMessage({

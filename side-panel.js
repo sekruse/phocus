@@ -1,5 +1,6 @@
 import {
   formatTimer, formatTime, formatDateInput, formatDateTimeInput,
+  calcStartOfDay,
   initToast, showToast, withExceptionToast,
   unpack,
 } from './utils.js';
@@ -13,7 +14,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
   const modalDeleteButton = document.getElementById("modal-delete-button");
   const historyDatePicker = document.getElementById('historyDatePicker');
 
-  let historyDate = new Date(formatDateInput(new Date()) + 'T00:00:00');
+  let historyDate = calcStartOfDay(new Date(), 4);
   let stateCache = unpack(await chrome.runtime.sendMessage({command: 'get_state'}));
 
   function showModal() {
@@ -156,7 +157,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
       const tr = createRow(options)
       historyTableBody.appendChild(tr);
     }
-    if (stateCache.inFocus) {
+    if (stateCache.inFocus && stateCache.focusStartTimestamp <= untilDate.getTime()) {
       const options = {
         startTimestamp: stateCache.focusStartTimestamp,
         pauseMillis: history.length > 0 ? stateCache.focusStartTimestamp - history[history.length - 1].stopTimestamp : 0,
@@ -188,6 +189,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
       return;
     }
     historyDate = new Date(historyDatePicker.value + 'T00:00:00');
+    historyDate.setHours(historyDate.getHours() + 4);
     refreshHistory();
   }));
 

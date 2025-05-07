@@ -24,6 +24,11 @@ export function formatTimer(millis, show_secs=true) {
   return result;
 }
 
+export function calcStartOfDay(date, spillOverHours) {
+  const d = new Date(date - (spillOverHours * 60 * 60 * 1000))
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), spillOverHours)
+}
+
 export function calcHistoryStats(history) {
   const stats = {
     focusMillis: 0,

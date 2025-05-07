@@ -37,7 +37,9 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
     modalData.removeAttribute('data-entry-version');
     const now = new Date();
     startTimeInput.value = formatDateTimeInput(new Date(now - (30 * 60 * 1000)));  // now - 30m
+    startTimeInput.removeAttribute('data-original-value');
     stopTimeInput.value = formatDateTimeInput(now);
+    stopTimeInput.removeAttribute('data-original-value');
     notesInput.value = 'manual entry';
     showModal();
   }
@@ -50,7 +52,9 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
     modalData.setAttribute('data-entry-id', entry.id);
     modalData.setAttribute('data-entry-version', entry.version);
     startTimeInput.value = formatDateTimeInput(new Date(entry.startTimestamp));
+    startTimeInput.setAttribute('data-original-value', startTimeInput.value);
     stopTimeInput.value = formatDateTimeInput(new Date(entry.stopTimestamp));
+    stopTimeInput.setAttribute('data-original-value', stopTimeInput.value);
     notesInput.value = entry.notes;
     showModal();
   }
@@ -63,10 +67,14 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
     const id = modalData.getAttribute('data-entry-id');
     const version = modalData.getAttribute('data-entry-version');
     const newEntry = {
-      startTimestamp: new Date(startTimeInput.value).getTime(),
-      stopTimestamp: new Date(stopTimeInput.value).getTime(),
       notes: notesInput.value,
     };
+    if (startTimeInput.value !== startTimeInput.getAttribute('data-original-value')) {
+      newEntry.startTimestamp = new Date(startTimeInput.value).getTime();
+    }
+    if (stopTimeInput.value !== stopTimeInput.getAttribute('data-original-value')) {
+      newEntry.stopTimestamp = new Date(stopTimeInput.value).getTime();
+    }
     const isNewEntry = !id;
     if (isNewEntry) {
       unpack(await chrome.runtime.sendMessage({

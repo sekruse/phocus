@@ -257,15 +257,6 @@ async function addHistoryEntry(entry) {
 
 
 async function updateHistoryEntry(entry) {
-  if (!Number.isInteger(entry.startTimestamp)) {
-    throw new UserException(`Bad start timestamp: ${entry.startTimestamp}`);
-  }
-  if (!Number.isInteger(entry.stopTimestamp)) {
-    throw new UserException(`Bad stop timestamp: ${entry.stopTimestamp}`);
-  }
-  if (entry.startTimestamp >= entry.stopTimestamp) {
-    throw new UserException(`Start time before stop time: ${new Date(entry.startTimestamp)}, ${new Date(entry.stopTimestamp)}`);
-  }
   const history = await getHistory();
   const state = await getState();
   const index = history.findIndex((e) => e.id === entry.id);
@@ -276,7 +267,19 @@ async function updateHistoryEntry(entry) {
   if (e.version !== entry.version) {
     throw new UserException(`Versions don't match: Recorded focus block is ${JSON.stringify(e)}, provided block is ${JSON.stringify(entry)}`);
   }
-  const previousMillis = e.stopTimestamp - e.startTimestamp;
+  if (entry.startTimestamp === undefined) {
+    entry.startTimestamp = e.startTimestamp;
+  } else if (!Number.isInteger(entry.startTimestamp)) {
+    throw new UserException(`Bad start timestamp: ${entry.startTimestamp}`);
+  }
+  if (entry.stopTimestamp === undefined) {
+    entry.stopTimestamp = e.stopTimestamp;
+  } else if (!Number.isInteger(entry.stopTimestamp)) {
+    throw new UserException(`Bad stop timestamp: ${entry.stopTimestamp}`);
+  }
+  if (entry.startTimestamp >= entry.stopTimestamp) {
+    throw new UserException(`Start time before stop time: ${new Date(entry.startTimestamp)}, ${new Date(entry.stopTimestamp)}`);
+  }
   e.startTimestamp = entry.startTimestamp;
   e.stopTimestamp = entry.stopTimestamp;
   e.notes = entry.notes;

@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
   const focusGoalInput = document.getElementById('focusGoal');
   const snoozeInput = document.getElementById('snooze');
   const idleDetectionInput = document.getElementById('idleDetection');
+  const spilloverHours = document.getElementById('spilloverHours');
   const optionsForm = document.getElementById('optionsForm');
   const resetStorageButton = document.getElementById('resetStorageButton');
 
@@ -14,9 +15,10 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
         command: 'set_options',
         args: {
           options: {
-            focusGoalMinutes: focusGoalInput.value,
-            snoozeMinutes: snoozeInput.value,
-            idleDetectionSeconds: idleDetectionInput.value,
+            focusGoalMinutes: Number.parseInt(focusGoalInput.value),
+            snoozeMinutes: Number.parseInt(snoozeInput.value),
+            idleDetectionSeconds: Number.parseInt(idleDetectionInput.value),
+            spilloverHours: Number.parseInt(spilloverHours.value),
           },
         },
       }));
@@ -33,4 +35,5 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
   focusGoalInput.value = options.focusGoalMinutes;
   snoozeInput.value = options.snoozeMinutes;
   idleDetectionInput.value = options.idleDetectionSeconds;
+  spilloverHours.value = options.spilloverHours;
 }));

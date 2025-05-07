@@ -69,6 +69,7 @@ const defaultOptions = {
   "focusGoalMinutes": 25,
   "snoozeMinutes": 10,
   "idleDetectionSeconds": 120,
+  "spilloverHours": 4,
 };
 
 async function getOptions() {
@@ -80,23 +81,29 @@ async function getOptions() {
 }
 
 function vetOptions(options) {
-  if (!Object.hasOwn(options, 'focusGoalMinutes')) {
-    throw new UserException(`Focus goal minutes are missing in ${JSON.stringify(options)}`);
+  if (!Number.isInteger(options.focusGoalMinutes)) {
+    throw new UserException(`Focus goal minutes should be an integer, is ${options.focusGoalMinutes}`);
   }
   if (!(options.focusGoalMinutes > 0 && options.focusGoalMinutes <= 240)) {
     throw new UserException(`Focus goal minutes should be between 0 and 240, is ${options.focusGoalMinutes}`);
   }
-  if (!Object.hasOwn(options, 'snoozeMinutes')) {
-    throw new UserException(`Snooze minutes are missing in ${JSON.stringify(options)}`);
+  if (!Number.isInteger(options.snoozeMinutes)) {
+    throw new UserException(`Snooze minutes should be an integer, is ${options.focusGoalMinutes}`);
   }
   if (!(options.snoozeMinutes > 0 && options.snoozeMinutes <= 60)) {
     throw new UserException(`Snooze minutes should be between 0 and 60, is ${options.snoozeMinutes}`);
   }
-  if (!Object.hasOwn(options, 'idleDetectionSeconds')) {
-    throw new UserException(`Idle detection seconds are missing in ${JSON.stringify(options)}`);
+  if (!Number.isInteger(options.idleDetectionSeconds)) {
+    throw new UserException(`Idle detection seconds should be an integer, is ${options.idleDetectionSeconds}`);
   }
   if (!(options.idleDetectionSeconds > 0 && options.idleDetectionSeconds <= 1800)) {
     throw new UserException(`Idle detection seconds should be between 0 and 1800, is ${options.idleDetectionSeconds}`);
+  }
+  if (!Number.isInteger(options.spilloverHours)) {
+    throw new UserException(`Spillover hours should be an integer, is ${options.spilloverHours}`);
+  }
+  if (!(options.spilloverHours >= 0 && options.spilloverHours <= 23)) {
+    throw new UserException(`Spillover hours should be between 0 and 23, is ${options.spilloverHours}`);
   }
 };
 
@@ -106,10 +113,11 @@ async function writeOptions(options) {
 
 async function setOptions(newOptions) {
   vetOptions(newOptions);
-  const options = getOptions();
+  const options = await getOptions();
   options.focusGoalMinutes = newOptions.focusGoalMinutes;
   options.snoozeMinutes = newOptions.snoozeMinutes;
   options.idleDetectionSeconds = newOptions.idleDetectionSeconds;
+  options.spilloverHours = newOptions.spilloverHours;
   await writeOptions(options);
   return options;
 }
@@ -217,6 +225,8 @@ async function listHistory(filter) {
   return history.filter((entry) => {
     // The negation allows for undefined filters properties to have no effect.
     return !(filter.fromTimestamp > entry.stopTimestamp) && !(filter.untilTimestamp < entry.startTimestamp);
+  }).toSorted((a, b) => {
+    return a.startTimestamp - b.startTimestamp
   });
 }
 

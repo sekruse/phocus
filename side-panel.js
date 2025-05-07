@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
   const modalDeleteButton = document.getElementById("modal-delete-button");
   const historyDatePicker = document.getElementById('historyDatePicker');
 
-  let historyDate = calcStartOfDay(new Date(), 4);
+  let optionsCache = unpack(await chrome.runtime.sendMessage({command: 'get_options'}));
+  let historyDate = calcStartOfDay(new Date(), optionsCache.spilloverHours);
   let stateCache = unpack(await chrome.runtime.sendMessage({command: 'get_state'}));
 
   function showModal() {
@@ -189,7 +190,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
       return;
     }
     historyDate = new Date(historyDatePicker.value + 'T00:00:00');
-    historyDate.setHours(historyDate.getHours() + 4);
+    historyDate.setHours(historyDate.getHours() + optionsCache.spilloverHours);
     refreshHistory();
   }));
 

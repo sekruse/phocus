@@ -1,7 +1,7 @@
 import { unpack, calcStartOfDay, calcHistoryStats, formatTimer, initDropDowns, initToast, showToast, withExceptionToast } from './utils.js'
 
-async function loadHistoryStats() {
-  const fromDate = calcStartOfDay(new Date(), 4);
+async function loadHistoryStats(spilloverHours) {
+  const fromDate = calcStartOfDay(new Date(), spilloverHours);
   const untilDate = new Date(fromDate);
   untilDate.setDate(untilDate.getDate() + 1);
   const history = unpack(await chrome.runtime.sendMessage({
@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
   const openSidePanelLink = document.getElementById('open-side-panel-link');
 
   let stateCache = unpack(await chrome.runtime.sendMessage({command: 'get_state'}));
-  let historyStatsCache = await loadHistoryStats();
+  let optionsCache = unpack(await chrome.runtime.sendMessage({command: 'get_options'}));
+  let historyStatsCache = await loadHistoryStats(optionsCache.spilloverHours);
 
   function updateElements(reset=false) {
     toggleFocusButton.disabled = false;

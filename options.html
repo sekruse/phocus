@@ -10,15 +10,29 @@
     <h2>Settings</h2>
     <div class="container">
       <form id="optionsForm" class="options">
-        <label for="focusGoal">Focus goal, in minutes:</label>
+        <label class="margin-top" for="focusGoal">Focus goal, in minutes:</label>
         <input type="number" min="1" step="1" id="focusGoal" name="focusGoal" class="options">
-        <label>Snooze time, in minutes:</label>
+
+        <label class="margin-top">Snooze time, in minutes:</label>
         <input type="number" min="1" step="1" id="snooze" class="options">
-        <label>Idle time before a warning is triggered, in seconds:</label>
+
+        <label class="margin-top">Idle time before a warning is triggered, in seconds:</label>
         <input type="number" min="1" step="1" id="idleDetection" class="options">
-        <label>Spillover hours at the beginning of the new day that should still be counted towards the previous day:</label>
+
+        <label class="margin-top">Spillover hours at the beginning of the new day that should still be counted towards the previous day:</label>
         <input type="number" min="0" max="23" step="1" id="spilloverHours" class="options">
-        <button type="submit" class="button blueButton options">Save</button>
+
+        <div class="margin-top">
+          <input type="checkbox" value="" id="showBadgeText" name="showBadgeText" checked="">
+          <label for="showBadgeText">Show badge text</label>
+        </div>
+
+        <div class="margin-top">
+          <input type="checkbox" value="" id="showNotifications" name="showNotifications" checked="">
+          <label for="showNotifications">Show all notifications</label>
+        </div>
+
+        <button type="submit" class="button blueButton options margin-top">Save</button>
       </form>
     </div>
   </section>

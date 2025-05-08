@@ -19,8 +19,14 @@ h1 {
   font-size: x-large;
 }
 label {
+  display: block;
   font-size: x-small;
 }
+input[type=checkbox] + label {
+  display: inline;
+  font-size: small;
+}
+
 .popup {
   width: 300px;
 }
@@ -60,10 +66,10 @@ label {
   width: -webkit-fill-available;
 }
 .margin-left {
-  margin-left: 5px;
+  margin-left: 1ex;
 }
-margin-top {
-  margin-top: 5px;
+.margin-top {
+  margin-top: 1em;
 }
 .hidden {
   display: none;
@@ -170,7 +176,12 @@ margin-top {
 .text-blue {
   color: #2196F3;
 }
-input {
+input[type=text],
+input[type=number],
+input[type=date],
+input[type=datetime-local] {
+  display: block;
+  width: 100%;
   background: transparent;
   border-color: gray;
   border-width: 1px;
@@ -197,13 +208,8 @@ input.highlight-orange {
 form.options {
   max-width: 500px;
 }
-input.options {
-  width: 100%;
-  padding: 5px 3px;
-  margin-bottom: 10px;
-}
-button.options {
-  width: 100%;
+.checkbox-container {
+  display: block;
 }
 
 .history-wrapper {
@@ -253,20 +259,6 @@ section {
   flex-flow: row wrap;
   justify-content: flex-end;
   align-items: stretch;
-}
-
-.form-element {
-  margin-bottom: 1em;
-}
-
-label {
-  display: inline-block;
-  margin-bottom: .3em;
-}
-
-input {
-  display: block;
-  width: 100%;
 }
 
 

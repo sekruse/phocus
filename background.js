@@ -71,6 +71,8 @@ const defaultOptions = {
   "snoozeMinutes": 10,
   "idleDetectionSeconds": 120,
   "spilloverHours": 4,
+  "showBadgeText": true,
+  "showNotifications": true,
 };
 
 async function getOptions() {
@@ -119,6 +121,8 @@ async function setOptions(newOptions) {
   options.snoozeMinutes = newOptions.snoozeMinutes;
   options.idleDetectionSeconds = newOptions.idleDetectionSeconds;
   options.spilloverHours = newOptions.spilloverHours;
+  options.showBadgeText = newOptions.showBadgeText;
+  options.showNotifications = newOptions.showNotifcations;
   await writeOptions(options);
   return options;
 }
@@ -310,9 +314,13 @@ async function updateBadge() {
     const focusMinutes = Math.trunc((Date.now() - state.focusStartTimestamp) / 60000);
     const isGoalAttained = focusMinutes >= options.focusGoalMinutes;
     chrome.action.setIcon({ path: isGoalAttained ? icons['orange-blue'] : icons['orange'] });
-    chrome.action.setBadgeTextColor({ color: isGoalAttained ? '#FFF' : '#000' });
-    chrome.action.setBadgeBackgroundColor({ color: isGoalAttained ? '#0076BA' : '#F2B13E' });
-    chrome.action.setBadgeText({ text: `${focusMinutes}'` });
+    if (options.showBadgeText) {
+      chrome.action.setBadgeTextColor({ color: isGoalAttained ? '#FFF' : '#000' });
+      chrome.action.setBadgeBackgroundColor({ color: isGoalAttained ? '#0076BA' : '#F2B13E' });
+      chrome.action.setBadgeText({ text: `${focusMinutes}'` });
+    } else {
+      chrome.action.setBadgeText({ text: '' });
+    }
   } else {
     chrome.action.setIcon({ path: icons['blue'] });
     chrome.action.setBadgeText({ text: '' });
@@ -323,6 +331,10 @@ stateChangeSubscribers.push((newState) => {
 });
 
 async function notifyOfGoal() {
+  const options = await getOptions();
+  if (!options.showNotifications) {
+    return;
+  }
   const state = await getState();
   const elapsedMins = Math.round((Date.now() - state.focusStartTimestamp) / 60000);
   await chrome.notifications.create(focusGoalNotificationName, {
@@ -341,6 +353,10 @@ stateChangeSubscribers.push((newState) => {
 });
 
 async function notifyOfAutocancel() {
+  const options = await getOptions();
+  if (!options.showNotifications) {
+    return;
+  }
   await chrome.notifications.create(lockedNotificationName, {
     type: 'basic',
     iconUrl: icons['blue']['128'],

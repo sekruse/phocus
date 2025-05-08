@@ -1,4 +1,5 @@
 import { UserException } from './utils.js';
+import icons from './icons.js';
 
 let stateCache = null;
 const defaultState = {
@@ -304,12 +305,16 @@ async function deleteFromHistory(entry) {
 
 async function updateBadge() {
   const state = await getState();
+  const options = await getOptions();
   if (state.inFocus) {
     const focusMinutes = Math.trunc((Date.now() - state.focusStartTimestamp) / 60000);
-    chrome.action.setBadgeTextColor({ color: '#FFF' });
-    chrome.action.setBadgeBackgroundColor({ color: (focusMinutes < focusGoalMinutes) ? '#cc3300' : '#009933' });
-    chrome.action.setBadgeText({ text: `${focusMinutes}m` });
+    const isGoalAttained = focusMinutes >= options.focusGoalMinutes;
+    chrome.action.setIcon({ path: isGoalAttained ? icons['orange-blue'] : icons['orange'] });
+    chrome.action.setBadgeTextColor({ color: isGoalAttained ? '#FFF' : '#000' });
+    chrome.action.setBadgeBackgroundColor({ color: isGoalAttained ? '#0076BA' : '#F2B13E' });
+    chrome.action.setBadgeText({ text: `${focusMinutes}'` });
   } else {
+    chrome.action.setIcon({ path: icons['blue'] });
     chrome.action.setBadgeText({ text: '' });
   }
 }
@@ -322,7 +327,7 @@ async function notifyOfGoal() {
   const elapsedMins = Math.round((Date.now() - state.focusStartTimestamp) / 60000);
   await chrome.notifications.create(focusGoalNotificationName, {
     type: 'basic',
-    iconUrl: 'images/icon-128.png',
+    iconUrl: icons['orange-blue']['128'],
     title: 'Phocus',
     message: `You have focused for ${elapsedMins} minutes now. Time for a break?`,
     requireInteraction: true,
@@ -338,7 +343,7 @@ stateChangeSubscribers.push((newState) => {
 async function notifyOfAutocancel() {
   await chrome.notifications.create(lockedNotificationName, {
     type: 'basic',
-    iconUrl: 'images/icon-128.png',
+    iconUrl: icons['blue']['128'],
     title: 'Phocus',
     message: 'Your focus time was cancelled when you locked your computer.',
     requireInteraction: false,
@@ -355,7 +360,7 @@ async function notifyOfIdleDetection() {
   const date = new Date(state.idleStartTimestamp);
   await chrome.notifications.create(idleNotificationName, {
     type: 'basic',
-    iconUrl: 'images/icon-128.png',
+    iconUrl: icons['orange']['128'],
     title: 'Phocus',
     message: `Your computer has been detected as idle since ${date.toLocaleTimeString()}. Have you left your focus then?`,
     requireInteraction: true,

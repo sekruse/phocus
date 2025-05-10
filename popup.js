@@ -1,4 +1,5 @@
-import { unpack, calcStartOfDay, calcHistoryStats, formatTimer, initDropDowns, initToast, showToast, withExceptionToast } from './utils.js'
+import { unpack, calcStartOfDay, calcHistoryStats, formatTimer } from './utils.js'
+import { dropDowns, toasts } from './widgets.js';
 
 async function loadHistoryStats(spilloverHours) {
   const fromDate = calcStartOfDay(new Date(), spilloverHours);
@@ -11,9 +12,9 @@ async function loadHistoryStats(spilloverHours) {
   return calcHistoryStats(history);
 }
 
-document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
-  initDropDowns();
-  initToast();
+document.addEventListener('DOMContentLoaded', toasts.catching(async () => {
+  dropDowns.init();
+  toasts.init();
   const toggleFocusButton = document.getElementById('toggle-focus-button');
   const toggleFocusButtonSelector = document.getElementById('toggle-focus-button-selector');
   const toggleFocusDropDownResume = document.getElementById('toggle-focus-dropdown-resume');
@@ -54,17 +55,17 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
     }
   };
 
-  toggleFocusButton.addEventListener('click', withExceptionToast(async () => {
+  toggleFocusButton.addEventListener('click', toasts.catching(async () => {
     let response;
     const command = stateCache.inFocus ? 'leave_focus' : 'enter_focus';
     unpack(await chrome.runtime.sendMessage({ command }));
   }));
 
-  toggleFocusDropDownResume.addEventListener('click', withExceptionToast(async () => {
+  toggleFocusDropDownResume.addEventListener('click', toasts.catching(async () => {
     unpack(await chrome.runtime.sendMessage({ command: 'resume_focus' }));
   }));
 
-  toggleFocusDropDownSinceActive.addEventListener('click', withExceptionToast(async () => {
+  toggleFocusDropDownSinceActive.addEventListener('click', toasts.catching(async () => {
     unpack(await chrome.runtime.sendMessage({
       command: 'enter_focus',
       args: {
@@ -74,19 +75,19 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
   }));
 
 
-  notesTextInput.addEventListener('change', withExceptionToast(async (ev) => {
+  notesTextInput.addEventListener('change', toasts.catching(async (ev) => {
     unpack(await chrome.runtime.sendMessage({
       command: 'set_notes',
       args: notesTextInput.value,
     }));
   }));
 
-  openSidePanelLink?.addEventListener('click', withExceptionToast(async () => {
+  openSidePanelLink?.addEventListener('click', toasts.catching(async () => {
     const window = await chrome.windows.getCurrent();
     await chrome.sidePanel.open({windowId: window.id});
   }));
 
-  chrome.runtime.onMessage.addListener(withExceptionToast(async (msg, sender) => {
+  chrome.runtime.onMessage.addListener(toasts.catching(async (msg, sender) => {
     if (msg.event === 'state_changed') {
       stateCache = msg.state;
       updateElements();

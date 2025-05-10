@@ -1,32 +1,19 @@
 import {
   formatTimer, formatTime, formatDateInput, formatDateTimeInput,
   calcStartOfDay,
-  initToast, showToast, withExceptionToast,
   unpack,
 } from './utils.js';
 
-document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
-  initToast();
-  const modal = document.getElementById("modal");
+import { modal, toasts } from './widgets.js';
+
+document.addEventListener('DOMContentLoaded', toasts.catching(async () => {
+  toasts.init();
   const addEntryButton = document.getElementById("add-entry-button");
-  const modalCancelButton = document.getElementById("modal-cancel-button");
-  const modalSaveButton = document.getElementById("modal-save-button");
-  const modalDeleteButton = document.getElementById("modal-delete-button");
   const historyDatePicker = document.getElementById('historyDatePicker');
 
   let optionsCache = unpack(await chrome.runtime.sendMessage({command: 'get_options'}));
   let historyDate = calcStartOfDay(new Date(), optionsCache.spilloverHours);
   let stateCache = unpack(await chrome.runtime.sendMessage({command: 'get_state'}));
-
-  function showModal() {
-    modal.classList.remove('hidden', 'animate-vanish', 'animate-appear');
-    modal.classList.add('animate-appear');
-  }
-
-  function hideModal() {
-    modal.classList.remove('animate-appear');
-    modal.classList.add('animate-vanish');
-  }
 
   function showModalForAdd() {
     const modalData = document.getElementById('modal-data');
@@ -41,7 +28,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
     stopTimeInput.value = formatDateTimeInput(now);
     stopTimeInput.removeAttribute('data-original-value');
     notesInput.value = 'manual entry';
-    showModal();
+    modal.show();
   }
 
   function showModalForEdit(entry) {
@@ -56,7 +43,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
     stopTimeInput.value = formatDateTimeInput(new Date(entry.stopTimestamp));
     stopTimeInput.setAttribute('data-original-value', stopTimeInput.value);
     notesInput.value = entry.notes;
-    showModal();
+    modal.show();
   }
 
   async function saveFromModal() {
@@ -90,10 +77,9 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
       }));
     }
     await refreshHistory();
-    hideModal();
-    showToast('Focus block updated.', 3000 /*ms*/);
+    modal.hide();
+    toasts.show('Focus block updated.', 3000 /*ms*/);
   }
-  modalSaveButton.addEventListener('click', withExceptionToast(saveFromModal));
 
   async function deleteFromModal() {
     const modalData = document.getElementById('modal-data');
@@ -107,10 +93,10 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
       },
     }));
     await refreshHistory();
-    hideModal();
-    showToast('Focus block deleted.', 3000 /*ms*/);
+    modal.hide();
+    toasts.show('Focus block deleted.', 3000 /*ms*/);
   }
-  modalDeleteButton.addEventListener('click', withExceptionToast(deleteFromModal));
+  modal.init(saveFromModal, deleteFromModal);
 
   async function refreshHistory() {
     const fromDate = historyDate;
@@ -128,7 +114,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
       const tr = document.createElement('tr');
       if (options.onClick) {
         tr.classList.add('row-clickable');
-        tr.addEventListener('click', withExceptionToast(options.onClick));
+        tr.addEventListener('click', toasts.catching(options.onClick));
       }
       let td = document.createElement('td');
       if (options.startTimestamp) {
@@ -193,7 +179,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
   refreshHistory();
 
   historyDatePicker.value = formatDateInput(historyDate);
-  historyDatePicker.addEventListener('input', withExceptionToast((ev) => {
+  historyDatePicker.addEventListener('input', toasts.catching((ev) => {
     if (historyDatePicker.value === '') {
       return;
     }
@@ -202,7 +188,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
     refreshHistory();
   }));
 
-  chrome.runtime.onMessage.addListener(withExceptionToast((msg, sender) => {
+  chrome.runtime.onMessage.addListener(toasts.catching((msg, sender) => {
     if (msg.event === 'history_changed') {
       refreshHistory();
     } else if (msg.event === 'state_changed') {
@@ -213,6 +199,5 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
     }
   }));
 
-  addEntryButton.addEventListener('click', withExceptionToast(showModalForAdd));
-  modalCancelButton.addEventListener('click', withExceptionToast(hideModal));
+  addEntryButton.addEventListener('click', toasts.catching(showModalForAdd));
 }));

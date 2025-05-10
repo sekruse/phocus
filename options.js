@@ -1,7 +1,8 @@
-import { unpack, initToast, showToast, withExceptionToast } from './utils.js';
+import { unpack } from './utils.js';
+import { toasts } from './widgets.js';
 
-document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
-  initToast();
+document.addEventListener('DOMContentLoaded', toasts.catching(async () => {
+  toasts.init();
   const focusGoalInput = document.getElementById('focusGoal');
   const snoozeInput = document.getElementById('snooze');
   const idleDetectionInput = document.getElementById('idleDetection');
@@ -11,7 +12,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
   const showBadgeText = document.getElementById('showBadgeText');
   const showNotifications = document.getElementById('showNotifications');
 
-  optionsForm.addEventListener('submit', withExceptionToast(async (event) => {
+  optionsForm.addEventListener('submit', toasts.catching(async (event) => {
       event.preventDefault();
       unpack(await chrome.runtime.sendMessage({
         command: 'set_options',
@@ -26,10 +27,10 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
           },
         },
       }));
-      showToast('Options saved.', 3000 /*ms*/);
+      toasts.show('Options saved.', 3000 /*ms*/);
   }));
 
-  resetStorageButton.addEventListener('click', withExceptionToast(async (ev) => {
+  resetStorageButton.addEventListener('click', toasts.catching(async (ev) => {
     const response = unpack(await chrome.runtime.sendMessage({
       command: 'reset_storage',
     }));

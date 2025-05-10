@@ -122,7 +122,7 @@ async function setOptions(newOptions) {
   options.idleDetectionSeconds = newOptions.idleDetectionSeconds;
   options.spilloverHours = newOptions.spilloverHours;
   options.showBadgeText = newOptions.showBadgeText;
-  options.showNotifications = newOptions.showNotifcations;
+  options.showNotifications = newOptions.showNotifications;
   await writeOptions(options);
   return options;
 }

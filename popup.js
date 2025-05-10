@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', withExceptionToast(async () => {
       stateCache = msg.state;
       updateElements();
     } else if (msg.event === 'history_changed') {
-      historyStatsCache = await loadHistoryStats();
+      historyStatsCache = await loadHistoryStats(optionsCache.spilloverHours);
       updateElements();
     } else {
       console.log(`Discarding message from ${sender}:\n${JSON.stringify(msg)}`);

@@ -1,10 +1,10 @@
 import {
   formatTimer, formatTime, formatDateInput, formatDateTimeInput,
-  calcStartOfDay,
   unpack,
 } from './utils.js';
 
 import { modal, toasts } from './widgets.js';
+import historyUtils from './history.js';
 
 document.addEventListener('DOMContentLoaded', toasts.catching(async () => {
   toasts.init();
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', toasts.catching(async () => {
   const historyDatePicker = document.getElementById('historyDatePicker');
 
   let optionsCache = unpack(await chrome.runtime.sendMessage({command: 'get_options'}));
-  let historyDate = calcStartOfDay(new Date(), optionsCache.spilloverHours);
+  let historyDate = historyUtils.calcStartOfDay(new Date(), optionsCache.spilloverHours);
   let stateCache = unpack(await chrome.runtime.sendMessage({command: 'get_state'}));
 
   function showModalForAdd() {

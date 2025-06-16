@@ -1,15 +1,16 @@
-import { unpack, calcStartOfDay, calcHistoryStats, formatTimer } from './utils.js'
+import { unpack, formatTimer } from './utils.js'
 import { dropDowns, toasts } from './widgets.js';
+import historyUtils from './history.js';
 
 async function loadHistoryStats(spilloverHours) {
-  const fromDate = calcStartOfDay(new Date(), spilloverHours);
+  const fromDate = historyUtils.calcStartOfDay(new Date(), spilloverHours);
   const untilDate = new Date(fromDate);
   untilDate.setDate(untilDate.getDate() + 1);
   const history = unpack(await chrome.runtime.sendMessage({
     command: "list_history",
     args: { fromTimestamp: fromDate.getTime(), untilTimestamp: untilDate.getTime() },
   }));
-  return calcHistoryStats(history);
+  return historyUtils.calcHistoryStats(history);
 }
 
 document.addEventListener('DOMContentLoaded', toasts.catching(async () => {

@@ -18,13 +18,13 @@
         </ul>
       </div>
 
-      <div class="flex flex-row flex-row-time-display flex-center">
+      <div class="flex flex-row flex-row-time-display flex-center margin-top-s">
           Focus:&nbsp;<span id="total-focus-display" class="text-orange font-bold">...</span>
           <span style="margin-left: 5px; margin-right: 5px;">&middot;</span>
           Pause:&nbsp;<span id="total-pause-display" class="text-blue font-bold">...</span>
       </div>
 
-      <div class="flex flex-row">
+      <div class="flex flex-row margin-top-s">
         <input type="text" id="notes-text-input" placeholder="Notes" class="width-stretch">
       </div>
     </div>
@@ -58,8 +58,10 @@
         -->
       </tbody>
     </table>
+    <div class="flex flex-row flex-end">
+      <button id="add-entry-button" class="button button-big button-blue margin-top">+</button>
+    </div>
   </section>
-  <button id="add-entry-button" class="button button-big button-blue">+</button>
 
   <!-- Modal -->
   <div id="modal" class="modal hidden">

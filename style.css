@@ -15,12 +15,13 @@ a {
 }
 h1 {
   border-bottom: #6f6f6f solid 1px;
-  margin-bottom: 5px;
+  margin-bottom: 1ex;
   font-size: x-large;
 }
 label {
   display: block;
   font-size: x-small;
+  margin-bottom: 1ex;
 }
 input[type=checkbox] + label {
   display: inline;
@@ -46,6 +47,9 @@ input[type=checkbox] + label {
 .flex-center {
   justify-content: center;
 }
+.flex-end {
+  justify-content: flex-end;
+}
 .flex-row-time-display {
   align-items: baseline;
 }
@@ -70,6 +74,9 @@ input[type=checkbox] + label {
 }
 .margin-top {
   margin-top: 1em;
+}
+.margin-top-s {
+  margin-top: 0.5em;
 }
 .hidden {
   display: none;

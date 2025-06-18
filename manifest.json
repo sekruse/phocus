@@ -1,7 +1,7 @@
 {
   "name": "Phocus",
   "description": "Get in the zone and track your focus time.",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "manifest_version": 3,
   "permissions": [
     "alarms",

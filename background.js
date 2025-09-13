@@ -15,19 +15,19 @@ const defaultState = {
 async function getState() {
   if (stateCache === null) {
     const { state: loadedState } = await chrome.storage.local.get(['state']);
-    stateCache = {...defaultState, ...loadedState};
+    stateCache = { ...defaultState, ...loadedState };
   }
   return stateCache;
 }
 
-function writeState(state=stateCache) {
+function writeState(state = stateCache) {
   const result = chrome.storage.local.set({ state });
   notifyStateChanged(state);  // fire and forget
   return result;
 }
 
 const stateChangeSubscribers = [];
-function notifyStateChanged(state=stateCache) {
+function notifyStateChanged(state = stateCache) {
   stateChangeSubscribers.forEach((subscriber) => subscriber(state));
   chrome.runtime.sendMessage({
     event: 'state_changed',
@@ -78,7 +78,7 @@ const defaultOptions = {
 async function getOptions() {
   if (optionsCache === null) {
     const { options: loadedOptions } = await chrome.storage.local.get(['options']);
-    optionsCache = {...defaultOptions, ...loadedOptions};
+    optionsCache = { ...defaultOptions, ...loadedOptions };
   }
   return optionsCache;
 }
@@ -176,7 +176,7 @@ async function enterFocus(args) {
   const history = await getHistory();
   if (history.length > 0) {
     history.sort((a, b) => a.stopTimestamp - b.stopTimestamp);
-    const latestEntry = history[history.length-1];
+    const latestEntry = history[history.length - 1];
     if (startTimestamp < latestEntry.stopTimestamp) {
       throw new UserException(`Latest history entry ending at ${new Date(latestEntry.stopTimestamp)} precedes start timestamp at ${new Date(startTimestamp)}.`);
     }
@@ -220,7 +220,7 @@ async function resumeFocus() {
     throw new UserException('No history, cannot resume previous focus block.');
   }
   history.sort((a, b) => a.stopTimestamp - b.stopTimestamp);
-  const latestEntry = history[history.length-1];
+  const latestEntry = history[history.length - 1];
   await deleteFromHistory(latestEntry);
   await enterFocus({ startTimestamp: latestEntry.startTimestamp });
 }
@@ -441,7 +441,7 @@ const commands = {
     return resetStorage();
   },
 };
-  
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const impl = commands[request.command];
   if (!impl) {

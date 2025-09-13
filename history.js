@@ -17,7 +17,7 @@ function calcHistoryStats(history) {
     stats.focusMillis += entry.stopTimestamp - entry.startTimestamp;
     stats.lastStopTimestamp = Math.max(stats.lastStopTimestamp, entry.stopTimestamp);
     if (i > 0) {
-      const prevEntry = history[i-1];
+      const prevEntry = history[i - 1];
       stats.pauseMillis += entry.startTimestamp - prevEntry.stopTimestamp;
     }
   }

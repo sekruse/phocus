@@ -13,21 +13,21 @@ document.addEventListener('DOMContentLoaded', toasts.catching(async () => {
   const showNotifications = document.getElementById('showNotifications');
 
   optionsForm.addEventListener('submit', toasts.catching(async (event) => {
-      event.preventDefault();
-      unpack(await chrome.runtime.sendMessage({
-        command: 'set_options',
-        args: {
-          options: {
-            focusGoalMinutes: Number.parseInt(focusGoalInput.value),
-            snoozeMinutes: Number.parseInt(snoozeInput.value),
-            idleDetectionSeconds: Number.parseInt(idleDetectionInput.value),
-            spilloverHours: Number.parseInt(spilloverHours.value),
-            showBadgeText: showBadgeText.checked,
-            showNotifications: showNotifications.checked,
-          },
+    event.preventDefault();
+    unpack(await chrome.runtime.sendMessage({
+      command: 'set_options',
+      args: {
+        options: {
+          focusGoalMinutes: Number.parseInt(focusGoalInput.value),
+          snoozeMinutes: Number.parseInt(snoozeInput.value),
+          idleDetectionSeconds: Number.parseInt(idleDetectionInput.value),
+          spilloverHours: Number.parseInt(spilloverHours.value),
+          showBadgeText: showBadgeText.checked,
+          showNotifications: showNotifications.checked,
         },
-      }));
-      toasts.show('Options saved.', 3000 /*ms*/);
+      },
+    }));
+    toasts.show('Options saved.', 3000 /*ms*/);
   }));
 
   resetStorageButton.addEventListener('click', toasts.catching(async (ev) => {

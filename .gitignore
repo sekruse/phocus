@@ -1,2 +1,5 @@
 # Build output
 phocus.zip
+
+# Dummy root marker for language server.
+package-lock.json

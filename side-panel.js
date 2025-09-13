@@ -11,9 +11,9 @@ document.addEventListener('DOMContentLoaded', toasts.catching(async () => {
   const addEntryButton = document.getElementById("add-entry-button");
   const historyDatePicker = document.getElementById('historyDatePicker');
 
-  let optionsCache = unpack(await chrome.runtime.sendMessage({command: 'get_options'}));
+  let optionsCache = unpack(await chrome.runtime.sendMessage({ command: 'get_options' }));
   let historyDate = historyUtils.calcStartOfDay(new Date(), optionsCache.spilloverHours);
-  let stateCache = unpack(await chrome.runtime.sendMessage({command: 'get_state'}));
+  let stateCache = unpack(await chrome.runtime.sendMessage({ command: 'get_state' }));
 
   function showModalForAdd() {
     const modalData = document.getElementById('modal-data');

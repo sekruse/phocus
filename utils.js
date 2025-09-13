@@ -12,7 +12,7 @@ export class UserException {
   }
 }
 
-export function formatTimer(millis, show_secs=true) {
+export function formatTimer(millis, show_secs = true) {
   const secs = Math.trunc(millis / 1000) % 60;
   let result = show_secs ? ` ${secs}s` : '';
   const mins = Math.trunc(millis / 60000) % 60;
@@ -32,9 +32,9 @@ export function formatDateInput(date) {
 }
 
 export function formatTime(date) {
- const hh = new String(date.getHours()).padStart(2, '0');
- const mm = new String(date.getMinutes()).padStart(2, '0');
- return `${hh}:${mm}`;
+  const hh = new String(date.getHours()).padStart(2, '0');
+  const mm = new String(date.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
 }
 
 export function formatDateTimeInput(date) {

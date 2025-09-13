@@ -25,11 +25,11 @@ document.addEventListener('DOMContentLoaded', toasts.catching(async () => {
   const notesTextInput = document.getElementById('notes-text-input');
   const openSidePanelLink = document.getElementById('open-side-panel-link');
 
-  let stateCache = unpack(await chrome.runtime.sendMessage({command: 'get_state'}));
-  let optionsCache = unpack(await chrome.runtime.sendMessage({command: 'get_options'}));
+  let stateCache = unpack(await chrome.runtime.sendMessage({ command: 'get_state' }));
+  let optionsCache = unpack(await chrome.runtime.sendMessage({ command: 'get_options' }));
   let historyStatsCache = await loadHistoryStats(optionsCache.spilloverHours);
 
-  function updateElements(reset=false) {
+  function updateElements(reset = false) {
     toggleFocusButton.disabled = false;
     toggleFocusButton.classList.toggle('button-blue', !stateCache.inFocus);
     toggleFocusButtonSelector.classList.toggle('button-blue', !stateCache.inFocus);
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', toasts.catching(async () => {
 
   openSidePanelLink?.addEventListener('click', toasts.catching(async () => {
     const window = await chrome.windows.getCurrent();
-    await chrome.sidePanel.open({windowId: window.id});
+    await chrome.sidePanel.open({ windowId: window.id });
   }));
 
   chrome.runtime.onMessage.addListener(toasts.catching(async (msg, sender) => {

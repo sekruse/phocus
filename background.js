@@ -140,9 +140,6 @@ const updateAlarmName = 'phocus-update-alarm';
 const focusGoalNotificationName = 'phocus-goal-notification';
 const lockedNotificationName = 'phocus-locked-notification';
 const idleNotificationName = 'phocus-idle-notification';
-const focusGoalMinutes = 25;
-const snoozeMinutes = 10;
-const idleDetectionSeconds = 120;
 const alarmConfig = {
   periodInMinutes: 0.5,
 };
@@ -158,6 +155,7 @@ async function enterFocus(args) {
   if (state.inFocus) {
     return state;
   }
+  const options = await getOptions();
   let startTimestamp;
   if (args?.startTimestamp) {
     startTimestamp = args.startTimestamp;
@@ -183,7 +181,7 @@ async function enterFocus(args) {
   }
   state.focusStartTimestamp = startTimestamp;
   state.inFocus = true;
-  state.nextAlarmTimestamp = state.focusStartTimestamp + (focusGoalMinutes * 60000);
+  state.nextAlarmTimestamp = state.focusStartTimestamp + (options.focusGoalMinutes * 60000);
   state.idleStartTimestamp = 0;
   state.focusStopTimestamp = 0;
   chrome.alarms.create(updateAlarmName, alarmConfig);
@@ -481,12 +479,13 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 chrome.notifications.onButtonClicked.addListener(async (notificationId, btnIndex) => {
+  const options = await getOptions();
   if (notificationId === focusGoalNotificationName) {
     chrome.notifications.clear(focusGoalNotificationName);
     if (btnIndex === 0) {
       // Snooze.
       const state = await getState();
-      state.nextAlarmTimestamp = Date.now() + (snoozeMinutes * 60000);
+      state.nextAlarmTimestamp = Date.now() + (options.snoozeMinutes * 60000);
       await writeState(state);
       return;
     }
@@ -512,9 +511,10 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, btnIndex
   throw new Error(`Unknown notification: ${notificationId}`);
 });
 
-chrome.idle.setDetectionInterval(idleDetectionSeconds);
+getOptions().then(options => chrome.idle.setDetectionInterval(options.idleDetectionSeconds));
 chrome.idle.onStateChanged.addListener(async (newState) => {
   const state = await getState();
+  const options = await getOptions();
   if (newState === 'active') {
     state.activeStartTimestamp = Date.now();
     await writeState(state);
@@ -522,7 +522,7 @@ chrome.idle.onStateChanged.addListener(async (newState) => {
   } else if (newState === 'idle') {
     // Ask the user if they are still here and give them the option to retroactively leave their focus time.
     if (state.inFocus && !state.idleStartTimestamp) {
-      state.idleStartTimestamp = Date.now() - (idleDetectionSeconds * 1000);
+      state.idleStartTimestamp = Date.now() - (options.idleDetectionSeconds * 1000);
       await writeState(state);
       notifyOfIdleDetection();
       return;

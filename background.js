@@ -99,7 +99,7 @@ function vetOptions(options) {
   if (!Number.isInteger(options.idleDetectionSeconds)) {
     throw new UserException(`Idle detection seconds should be an integer, is ${options.idleDetectionSeconds}`);
   }
-  if (!(options.idleDetectionSeconds > 0 && options.idleDetectionSeconds <= 1800)) {
+  if (!(options.idleDetectionSeconds >= 15 && options.idleDetectionSeconds <= 1800)) {
     throw new UserException(`Idle detection seconds should be between 0 and 1800, is ${options.idleDetectionSeconds}`);
   }
   if (!Number.isInteger(options.spilloverHours)) {
@@ -114,6 +114,12 @@ async function writeOptions(options) {
   return chrome.storage.local.set({ options });
 }
 
+const optionsChangeSubscribers = [];
+function notifyOptionsChanged(newOptions) {
+  optionsChangeSubscribers.forEach((subscriber) => subscriber(newOptions));
+}
+
+
 async function setOptions(newOptions) {
   vetOptions(newOptions);
   const options = await getOptions();
@@ -123,6 +129,7 @@ async function setOptions(newOptions) {
   options.spilloverHours = newOptions.spilloverHours;
   options.showBadgeText = newOptions.showBadgeText;
   options.showNotifications = newOptions.showNotifications;
+  notifyOptionsChanged(options);
   await writeOptions(options);
   return options;
 }
@@ -324,9 +331,8 @@ async function updateBadge() {
     chrome.action.setBadgeText({ text: '' });
   }
 }
-stateChangeSubscribers.push((newState) => {
-  updateBadge();
-});
+stateChangeSubscribers.push((_) => updateBadge());
+optionsChangeSubscribers.push((_) => updateBadge());
 
 async function notifyOfGoal() {
   const options = await getOptions();
@@ -512,6 +518,8 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, btnIndex
 });
 
 getOptions().then(options => chrome.idle.setDetectionInterval(options.idleDetectionSeconds));
+optionsChangeSubscribers.push((newOptions) => chrome.idle.setDetectionInterval(newOptions.idleDetectionSeconds));
+
 chrome.idle.onStateChanged.addListener(async (newState) => {
   const state = await getState();
   const options = await getOptions();

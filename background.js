@@ -1,6 +1,13 @@
 import { UserException } from './utils.js';
 import icons from './icons.js';
 
+const DEBUG = true;
+function debug(msg) {
+  if (DEBUG) {
+    console.log(`[${new Date().toTimeString()}] ${msg}`);
+  }
+}
+
 let stateCache = null;
 const defaultState = {
   "inFocus": false,
@@ -144,12 +151,17 @@ async function resetStorage() {
 }
 
 const updateAlarmName = 'phocus-update-alarm';
+const updateAlarmConfig = {
+  periodInMinutes: 0.5,
+};
+const clearIdleAlarmName = 'phocus-clear-idle-alarm';
+// TODO: Make this an editable option.
+const clearIdleAlarmConfig = {
+  delayInMinutes: 0.5,
+};
 const focusGoalNotificationName = 'phocus-goal-notification';
 const lockedNotificationName = 'phocus-locked-notification';
 const idleNotificationName = 'phocus-idle-notification';
-const alarmConfig = {
-  periodInMinutes: 0.5,
-};
 
 async function setNotes(notes) {
   const state = await getState();
@@ -191,7 +203,7 @@ async function enterFocus(args) {
   state.nextAlarmTimestamp = state.focusStartTimestamp + (options.focusGoalMinutes * 60000);
   state.idleStartTimestamp = 0;
   state.focusStopTimestamp = 0;
-  chrome.alarms.create(updateAlarmName, alarmConfig);
+  chrome.alarms.create(updateAlarmName, updateAlarmConfig);
   await writeState();
   return state;
 }
@@ -400,7 +412,7 @@ async function initialize() {
   }
   const alarm = await chrome.alarms.get(updateAlarmName);
   if (!alarm) {
-    await chrome.alarms.create(updateAlarmName, alarmConfig);
+    await chrome.alarms.create(updateAlarmName, updateAlarmConfig);
   };
   updateBadge();
 }
@@ -471,16 +483,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
+  debug(`Received alarm: ${JSON.stringify(alarm)}`);
+  const state = await getState();
   if (alarm.name === updateAlarmName) {
-    const state = await getState();
     updateBadge();
     if (state.nextAlarmTimestamp && Date.now() >= state.nextAlarmTimestamp) {
       notifyOfGoal();
       state.nextAlarmTimestamp = 0;
       writeState(state);
     }
+  } else if (alarm.name === clearIdleAlarmName) {
+    if (!state.idleStartTimestamp) {
+      return;
+    }
+    state.idleStartTimestamp = 0;
+    await writeState(state);
+    chrome.notifications.clear(idleNotificationName);
   } else {
-    throw new Error(`Unexpected alarm: {alarm}`);
+    throw new Error(`Unexpected alarm: ${alarm}`);
   }
 });
 
@@ -521,11 +541,16 @@ getOptions().then(options => chrome.idle.setDetectionInterval(options.idleDetect
 optionsChangeSubscribers.push((newOptions) => chrome.idle.setDetectionInterval(newOptions.idleDetectionSeconds));
 
 chrome.idle.onStateChanged.addListener(async (newState) => {
+  debug(`Registered state change to ${newState}`);
   const state = await getState();
   const options = await getOptions();
+  chrome.alarms.clear(clearIdleAlarmName);
   if (newState === 'active') {
     state.activeStartTimestamp = Date.now();
     await writeState(state);
+    if (state.idleStartTimestamp) {
+      chrome.alarms.create(clearIdleAlarmName, clearIdleAlarmConfig);
+    }
     return;
   } else if (newState === 'idle') {
     // Ask the user if they are still here and give them the option to retroactively leave their focus time.
@@ -537,14 +562,16 @@ chrome.idle.onStateChanged.addListener(async (newState) => {
     }
     return;
   } else if (newState === 'locked') {
-    // Cancel if machine is actively locked while in focus.
-    // If there is a pending idle notification, the device was likely auto-locked,
-    // so in that case we don't auto-cancel and wait for the user to return and
-    // tell if they forgot to mark their focus time as over.
-    if (state.inFocus && !state.idleStartTimestamp) {
-      leaveFocus();
-      notifyOfAutocancel();
+    // Cancel if machine is locked while in focus.
+    if (!state.inFocus) {
+      return;
     }
+    if (state.idleStartTimestamp) {
+      leaveFocus(state.idleStartTimestamp);
+    } else {
+      leaveFocus();
+    }
+    notifyOfAutocancel();
     return;
   }
   throw new Error(`Unknown idle state: ${newState}`);

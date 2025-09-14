@@ -77,6 +77,7 @@ const defaultOptions = {
   "focusGoalMinutes": 25,
   "snoozeMinutes": 10,
   "idleDetectionSeconds": 120,
+  "idleDismissalSeconds": 30,
   "spilloverHours": 4,
   "showBadgeText": true,
   "showNotifications": true,
@@ -107,7 +108,13 @@ function vetOptions(options) {
     throw new UserException(`Idle detection seconds should be an integer, is ${options.idleDetectionSeconds}`);
   }
   if (!(options.idleDetectionSeconds >= 15 && options.idleDetectionSeconds <= 1800)) {
-    throw new UserException(`Idle detection seconds should be between 0 and 1800, is ${options.idleDetectionSeconds}`);
+    throw new UserException(`Idle detection seconds should be between 15 and 1800, is ${options.idleDetectionSeconds}`);
+  }
+  if (!Number.isInteger(options.idleDismissalSeconds)) {
+    throw new UserException(`Idle notification dismissal seconds should be an integer, is ${options.idleDismissalSeconds}`);
+  }
+  if (!(options.idleDismissalSeconds >= 30 && options.idleDismissalSeconds <= 1800)) {
+    throw new UserException(`Idle notification dismissal seconds should be between 30 and 1800, is ${options.idleDismissalSeconds}`);
   }
   if (!Number.isInteger(options.spilloverHours)) {
     throw new UserException(`Spillover hours should be an integer, is ${options.spilloverHours}`);
@@ -133,6 +140,7 @@ async function setOptions(newOptions) {
   options.focusGoalMinutes = newOptions.focusGoalMinutes;
   options.snoozeMinutes = newOptions.snoozeMinutes;
   options.idleDetectionSeconds = newOptions.idleDetectionSeconds;
+  options.idleDismissalSeconds = newOptions.idleDismissalSeconds;
   options.spilloverHours = newOptions.spilloverHours;
   options.showBadgeText = newOptions.showBadgeText;
   options.showNotifications = newOptions.showNotifications;
@@ -155,10 +163,6 @@ const updateAlarmConfig = {
   periodInMinutes: 0.5,
 };
 const clearIdleAlarmName = 'phocus-clear-idle-alarm';
-// TODO: Make this an editable option.
-const clearIdleAlarmConfig = {
-  delayInMinutes: 0.5,
-};
 const focusGoalNotificationName = 'phocus-goal-notification';
 const lockedNotificationName = 'phocus-locked-notification';
 const idleNotificationName = 'phocus-idle-notification';
@@ -544,21 +548,20 @@ chrome.idle.onStateChanged.addListener(async (newState) => {
   debug(`Registered state change to ${newState}`);
   const state = await getState();
   const options = await getOptions();
-  chrome.alarms.clear(clearIdleAlarmName);
   if (newState === 'active') {
     state.activeStartTimestamp = Date.now();
     await writeState(state);
     if (state.idleStartTimestamp) {
-      chrome.alarms.create(clearIdleAlarmName, clearIdleAlarmConfig);
+      chrome.alarms.create(clearIdleAlarmName, { delayInMinutes: options.idleDismissalSeconds / 60 });
     }
     return;
   } else if (newState === 'idle') {
     // Ask the user if they are still here and give them the option to retroactively leave their focus time.
     if (state.inFocus && !state.idleStartTimestamp) {
+      chrome.alarms.clear(clearIdleAlarmName);  // in case there's a pending alarm that might dismiss the notification too early
       state.idleStartTimestamp = Date.now() - (options.idleDetectionSeconds * 1000);
       await writeState(state);
       notifyOfIdleDetection();
-      return;
     }
     return;
   } else if (newState === 'locked') {
